@@ -1,7 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Sarabun } from "next/font/google";
 import "./globals.css";
-import BottomNav from "@/components/BottomNav";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
 
 const sarabun = Sarabun({
   subsets: ["latin", "thai"],
@@ -22,9 +29,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th" className={sarabun.variable}>
-      <body className="min-h-screen safe-bottom">
-        {children}
-        <BottomNav />
+      <body className="min-h-screen flex flex-col bg-offwhite text-navy">
+        <Header />
+        <main className="flex-1 w-full max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8">
+          {children}
+        </main>
+        <Footer />
       </body>
     </html>
   );

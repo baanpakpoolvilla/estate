@@ -1,44 +1,81 @@
 import Link from "next/link";
-
-const villas = [
-  { id: "1", name: "วิลล่า บีช 101", location: "หาดบางแสน", price: "12.9", roi: "8.5", beds: 4, sqm: 280 },
-  { id: "2", name: "วิลล่า ฮิลล์ 202", location: "เขาใหญ่", price: "15.5", roi: "9.2", beds: 5, sqm: 320 },
-  { id: "3", name: "วิลล่า เลค 303", location: "พัทยา", price: "14.2", roi: "8.8", beds: 4, sqm: 300 },
-  { id: "4", name: "วิลล่า ซันเซ็ต 404", location: "หัวหิน", price: "18.0", roi: "9.5", beds: 6, sqm: 380 },
-];
+import { villasList } from "@/data/villas";
 
 export default function VillasPage() {
   return (
-    <main className="min-h-screen pb-6">
-      <header className="sticky top-0 z-40 bg-navy text-white px-4 py-3">
-        <h1 className="font-semibold text-lg">พูลวิลล่าทั้งหมด</h1>
-        <p className="text-white/80 text-sm">เลือกหลังที่สนใจดูรายละเอียดการลงทุน</p>
-      </header>
+    <div className="w-full min-w-0">
+      <div className="mb-6 md:mb-8">
+        <h1 className="font-bold text-xl md:text-2xl text-navy">รายการบ้าน</h1>
+        <p className="text-gray-600 mt-1 md:text-base">
+          เลือกหลังที่สนใจ ดูวิดีโอ แกลลอรี่ ประวัติการเช่า และตัวเลขการลงทุนแบบละเอียด
+        </p>
+      </div>
 
-      <div className="px-4 py-4 space-y-4">
-        {villas.map((villa) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        {villasList.map((villa) => (
           <Link
             key={villa.id}
             href={`/villas/${villa.id}`}
-            className="block bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 active:scale-[0.99]"
+            className="group block bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 transition-all hover:shadow-lg hover:border-blue/20"
           >
-            <div className="aspect-[16/10] bg-gradient-to-br from-blue/20 to-navy/30" />
-            <div className="p-4">
-              <h2 className="font-semibold text-navy">{villa.name}</h2>
-              <p className="text-gray-500 text-sm">{villa.location}</p>
-              <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-600">
+            {/* Thumbnail: YouTube หรือ placeholder */}
+            <div className="relative aspect-[16/10] bg-navy overflow-hidden">
+              <img
+                src={`https://img.youtube.com/vi/${villa.mainVideoId}/mqdefault.jpg`}
+                alt={villa.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-navy/80 via-transparent to-transparent" />
+              {villa.tag && (
+                <span className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-white/95 text-navy text-xs font-medium">
+                  {villa.tag}
+                </span>
+              )}
+              <span className="absolute bottom-2 left-2 text-white/90 text-xs font-medium">
+                ดูวิดีโอ + รายละเอียดการลงทุน
+              </span>
+            </div>
+
+            <div className="p-4 md:p-5">
+              <h2 className="font-semibold text-navy text-base md:text-lg group-hover:text-blue">
+                {villa.name}
+              </h2>
+              <p className="text-gray-500 text-sm mt-0.5">{villa.location}</p>
+
+              {/* ตัวเลขหลัก: ราคา, ROI, กำไร/เดือน */}
+              <div className="grid grid-cols-3 gap-2 mt-3 text-center">
+                <div className="bg-offwhite rounded-lg py-2 px-1">
+                  <p className="text-gray-500 text-[10px] md:text-xs truncate">ราคา</p>
+                  <p className="text-blue font-semibold text-xs md:text-sm truncate">
+                    ฿{villa.price} ลบ.
+                  </p>
+                </div>
+                <div className="bg-offwhite rounded-lg py-2 px-1">
+                  <p className="text-gray-500 text-[10px] md:text-xs truncate">ROI</p>
+                  <p className="text-navy font-semibold text-xs md:text-sm">~{villa.roi}%</p>
+                </div>
+                <div className="bg-offwhite rounded-lg py-2 px-1">
+                  <p className="text-gray-500 text-[10px] md:text-xs truncate">กำไร/เดือน</p>
+                  <p className="text-green-700 font-semibold text-xs md:text-sm truncate">
+                    {villa.profitMonthly}
+                  </p>
+                </div>
+              </div>
+
+              {/* สเปกบ้าน */}
+              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-sm text-gray-600">
                 <span>{villa.beds} ห้องนอน</span>
+                <span>{villa.baths} ห้องน้ำ</span>
                 <span>{villa.sqm} ตร.ม.</span>
               </div>
-              <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
-                <span className="text-blue font-semibold">฿{villa.price} ลบ.</span>
-                <span className="text-navy font-medium">ROI ~{villa.roi}%</span>
-              </div>
-              <p className="text-blue text-sm font-medium mt-1">ดูรายละเอียดการลงทุน →</p>
+
+              <p className="mt-3 pt-3 border-t border-gray-100 text-blue text-sm font-medium">
+                ดูรายละเอียดการลงทุน
+              </p>
             </div>
           </Link>
         ))}
       </div>
-    </main>
+    </div>
   );
 }

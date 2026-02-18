@@ -17,6 +17,9 @@ const config: Config = {
       fontFamily: {
         sarabun: ["var(--font-sarabun)", "sans-serif"],
       },
+      screens: {
+        xs: "375px",
+      },
     },
   },
   plugins: [],

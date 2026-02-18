@@ -9,12 +9,15 @@
   --offwhite: #F5F7FA;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
 body {
   @apply font-sarabun antialiased bg-offwhite text-navy;
   padding-bottom: env(safe-area-inset-bottom, 0);
+  overflow-x: hidden;
+  min-width: 0;
 }
 
-/* Safe area for bottom nav on notched devices */
-.safe-bottom {
-  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
-}
