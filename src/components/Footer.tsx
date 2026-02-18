@@ -1,6 +1,17 @@
 import Link from "next/link";
+import type { ContactSettingsItem } from "@/lib/data";
 
-export default function Footer() {
+const defaultContact = {
+  phone: "081-234-5678",
+  email: "info@poolvilla-estate.com",
+  lineUrl: "https://line.me/ti/p/xxxx",
+  address: null,
+  mapUrl: null,
+};
+
+export default function Footer({ contact }: { contact: ContactSettingsItem | null }) {
+  const c = contact ?? defaultContact;
+  const tel = c.phone?.replace(/\D/g, "") ?? "";
   return (
     <footer className="w-full bg-navy text-white mt-auto">
       <div className="w-full max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-10 space-y-6 md:space-y-8">
@@ -36,26 +47,29 @@ export default function Footer() {
           {/* ข้อมูลติดต่อสั้นๆ */}
           <div className="space-y-2 text-sm md:text-base">
             <p className="font-semibold text-white">ติดต่อ</p>
-            <p className="text-white/85">
-              โทร: <a href="tel:0812345678" className="hover:text-white">081-234-5678</a>
-            </p>
-            <p className="text-white/85">
-              อีเมล:{" "}
-              <a href="mailto:info@poolvilla-estate.com" className="hover:text-white">
-                info@poolvilla-estate.com
-              </a>
-            </p>
-            <p className="text-white/85">
-              Line:{" "}
-              <a
-                href="https://line.me/ti/p/xxxx"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-white"
-              >
-                เพิ่มเพื่อน Line
-              </a>
-            </p>
+            {c.phone && (
+              <p className="text-white/85">
+                โทร: <a href={tel ? `tel:${tel}` : "#"} className="hover:text-white">{c.phone}</a>
+              </p>
+            )}
+            {c.email && (
+              <p className="text-white/85">
+                อีเมล: <a href={`mailto:${c.email}`} className="hover:text-white">{c.email}</a>
+              </p>
+            )}
+            {c.lineUrl && (
+              <p className="text-white/85">
+                Line:{" "}
+                <a
+                  href={c.lineUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white"
+                >
+                  เพิ่มเพื่อน Line
+                </a>
+              </p>
+            )}
             <Link
               href="/contact"
               className="inline-block mt-2 px-4 py-2 rounded-lg bg-blue text-white text-sm font-semibold hover:bg-blue-light"

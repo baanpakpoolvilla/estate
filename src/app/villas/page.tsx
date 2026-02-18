@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { villasList } from "@/data/villas";
+import { getVillasForList } from "@/lib/data";
 
-export default function VillasPage() {
+export default async function VillasPage() {
+  const villasList = await getVillasForList();
   return (
     <div className="w-full min-w-0">
       <div className="mb-6 md:mb-8">

@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Villa {
+  id                 String   @id @default(cuid())
+  name               String
+  location           String
+  price              String
+  roi                String
+  beds               Int
+  baths              Int
+  sqm                Int
+  land               Int?
+  description        String?
+  mainVideoId        String?
+  tag                String?
+  sortOrder          Int      @default(0)
+  isPublished        Boolean  @default(true)
+  areaVideos         Json?    // [{ label, youtubeId }]
+  gallery            Json?    // [{ label, area }]
+  rentalHistory      Json?    // [{ period, occupancy, avgRate, note? }]
+  businessHistory    String?
+  salePlan           String?
+  investmentMonthly  Json?    // { revenue, expenses, profit }
+  accountingSummary  Json?    // [{ period, revenue, profit }]
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model ProjectPromo {
+  id        String   @id @default(cuid())
+  name      String
+  tagline   String?
+  location  String?
+  badge     String?
+  targetUrl String?
+  imageUrl  String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ContactSettings {
+  id        String   @id @default(cuid())
+  phone     String?
+  email     String?
+  lineUrl   String?
+  address   String?
+  mapUrl    String?
+  updatedAt DateTime @updatedAt
+}

@@ -1,27 +1,12 @@
 import Link from "next/link";
 import HeroSlider from "@/components/HeroSlider";
-import { villasList } from "@/data/villas";
+import { getVillasForList, getProjectPromos } from "@/lib/data";
 
-const featuredProjects = [
-  {
-    id: "sunset-resort",
-    name: "Sunset Pool Villa Resort",
-    tagline: "พูลวิลล่าหรูวิวทะเล ระดับพรีเมียม",
-    location: "หัวหิน",
-    badge: "โครงการใหม่",
-    href: "/villas",
-  },
-  {
-    id: "hill-estate",
-    name: "Hill Estate Pool Villas",
-    tagline: "โครงการพูลวิลล่าบนเขา ธรรมชาติครบวงจร",
-    location: "เขาใหญ่",
-    badge: "เปิดขายแล้ว",
-    href: "/villas",
-  },
-];
-
-export default function HomePage() {
+export default async function HomePage() {
+  const [villasList, featuredProjects] = await Promise.all([
+    getVillasForList(),
+    getProjectPromos(),
+  ]);
   const heroVillas = villasList.map((v) => ({
     id: v.id,
     name: v.name,
@@ -29,7 +14,7 @@ export default function HomePage() {
     price: v.price,
     roi: v.roi,
     profitMonthly: v.profitMonthly,
-    tag: v.tag,
+    tag: v.tag ?? undefined,
   }));
   const featuredVillas = villasList.slice(0, 3);
 

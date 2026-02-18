@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ContactSettingsItem } from "@/lib/data";
 
 const navItems = [
   { href: "/", label: "หน้าแรก" },
@@ -10,8 +11,11 @@ const navItems = [
   { href: "/contact", label: "ติดต่อ" },
 ];
 
-export default function Header() {
+export default function Header({ contact }: { contact?: ContactSettingsItem | null }) {
   const pathname = usePathname();
+  const tel =
+    contact?.phone?.replace(/\D/g, "") ||
+    "0812345678";
 
   return (
     <header className="sticky top-0 z-50 w-full bg-navy text-white shadow-md">
@@ -35,7 +39,7 @@ export default function Header() {
             );
           })}
           <a
-            href="tel:0812345678"
+            href={`tel:${tel}`}
             className="ml-1 md:ml-2 px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-base font-medium bg-blue text-white hover:bg-blue-light shrink-0"
           >
             โทร
