@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ImageUploadField from "@/components/admin/ImageUploadField";
 
 type ProjectFormData = {
   name: string;
@@ -8,6 +9,7 @@ type ProjectFormData = {
   location: string;
   badge: string;
   targetUrl: string;
+  imageUrl: string;
   sortOrder: number;
   isActive: boolean;
 };
@@ -18,6 +20,7 @@ const defaultValues: ProjectFormData = {
   location: "",
   badge: "",
   targetUrl: "/villas",
+  imageUrl: "",
   sortOrder: 0,
   isActive: true,
 };
@@ -38,6 +41,7 @@ export default function ProjectForm({ initial, onSubmit }: ProjectFormProps) {
       location: String(initial.location ?? ""),
       badge: String(initial.badge ?? ""),
       targetUrl: String(initial.targetUrl ?? "/villas"),
+      imageUrl: String(initial.imageUrl ?? ""),
       sortOrder: Number(initial.sortOrder) || 0,
       isActive: initial.isActive !== false,
     };
@@ -58,6 +62,7 @@ export default function ProjectForm({ initial, onSubmit }: ProjectFormProps) {
         location: form.location || null,
         badge: form.badge || null,
         targetUrl: form.targetUrl || null,
+        imageUrl: form.imageUrl || null,
         sortOrder: form.sortOrder,
         isActive: form.isActive,
       });
@@ -120,6 +125,13 @@ export default function ProjectForm({ initial, onSubmit }: ProjectFormProps) {
           onChange={(e) => update("targetUrl", e.target.value)}
           placeholder="/villas"
           className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-navy"
+        />
+      </div>
+      <div>
+        <ImageUploadField
+          label="รูปภาพ (แสดงบนการ์ดหน้าแรก)"
+          value={form.imageUrl}
+          onChange={(url) => update("imageUrl", url)}
         />
       </div>
       <div>

@@ -6,6 +6,7 @@ async function main() {
   await prisma.villa.deleteMany();
   await prisma.projectPromo.deleteMany();
   await prisma.contactSettings.deleteMany();
+  await prisma.article.deleteMany();
 
   const villas = [
     {
@@ -162,15 +163,43 @@ async function main() {
 
   await prisma.contactSettings.create({
     data: {
-      phone: "081-234-5678",
-      email: "info@poolvilla-estate.com",
-      lineUrl: "https://line.me/ti/p/xxxx",
-      address: "(ที่อยู่โครงการ หรือสำนักงาน)",
-      mapUrl: "",
+      companyName: "บริษัท ท๊อปฟอร์ม อสังหาริมทรัพย์ จำกัด",
+      companyNameEn: "TOPFORM REAL ESTATE CO., LTD.",
+      registrationNumber: "0205567002163",
+      address: "84/22 หมู่ที่ 7 ตำบลสุรศักดิ์ อำเภอศรีราชา จ.ชลบุรี 20110",
+      facebookUrl: "https://www.facebook.com/topformrealestateforinvesment/",
+      phone: null,
+      email: null,
+      lineUrl: null,
+      mapUrl: null,
     },
   });
 
-  console.log("Seed completed: villas, project promos, contact settings.");
+  const now = new Date();
+  await prisma.article.createMany({
+    data: [
+      {
+        title: "ลงทุนพูลวิลล่า เริ่มต้นอย่างไรให้ได้ผลตอบแทนดี",
+        slug: "invest-pool-villa-guide",
+        excerpt: "แนวทางเลือกพูลวิลล่าลงทุน ตรวจสอบทำเล สัญญาบริหาร และการประมาณการรายได้",
+        body: "การลงทุนพูลวิลล่าเป็นทางเลือกที่น่าสนใจสำหรับผู้ที่ต้องการรายได้ passive จากอสังหาริมทรัพย์\n\n**จุดที่ควรพิจารณา:**\n- ทำเลและความต้องการของตลาด\n- สัญญาบริหารปล่อยเช่าและอัตราค่าบริหาร\n- ประวัติการเข้าพักและรายได้จริง\n\nติดต่อทีมงาน Pool Villa Estate เพื่อขอข้อมูลโครงการและคำปรึกษา",
+        isPublished: true,
+        publishedAt: now,
+        sortOrder: 1,
+      },
+      {
+        title: "พูลวิลล่าหัวหิน vs พัทยา เปรียบเทียบจุดเด่นสำหรับนักลงทุน",
+        slug: "huahin-vs-pattaya-pool-villa",
+        excerpt: "เปรียบเทียบตลาดพูลวิลล่าหัวหินและพัทยา ทั้งกลุ่มลูกค้า รายได้และความเสี่ยง",
+        body: "ทั้งหัวหินและพัทยาเป็นตลาดพูลวิลล่าที่ได้รับความนิยม\n\n**หัวหิน:** เน้นกลุ่มครอบครัวและงานอีเวนต์ รายได้ต่อคืนสูง ฤดูกาลชัดเจน\n\n**พัทยา:** มีความต้องการกระจายทั้งปี ใกล้สนามบินและสิ่งอำนวยความสะดวก\n\nเลือกตามเป้าหมายการลงทุนและความชอบด้านความเสี่ยง",
+        isPublished: true,
+        publishedAt: now,
+        sortOrder: 2,
+      },
+    ],
+  });
+
+  console.log("Seed completed: villas, project promos, contact settings, articles.");
 }
 
 main()

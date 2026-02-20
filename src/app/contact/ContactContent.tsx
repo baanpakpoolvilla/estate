@@ -4,11 +4,17 @@ import { useState } from "react";
 import type { ContactSettingsItem } from "@/lib/data";
 
 const defaultContact: ContactSettingsItem = {
-  phone: "081-234-5678",
-  email: "info@poolvilla-estate.com",
-  lineUrl: "https://line.me/ti/p/xxxx",
-  address: "(ที่อยู่โครงการ หรือสำนักงาน)",
+  logoUrl: null,
+  faviconUrl: null,
+  companyName: "บริษัท ท๊อปฟอร์ม อสังหาริมทรัพย์ จำกัด",
+  companyNameEn: "TOPFORM REAL ESTATE CO., LTD.",
+  registrationNumber: "0205567002163",
+  phone: null,
+  email: null,
+  lineUrl: null,
+  address: "84/22 หมู่ที่ 7 ตำบลสุรศักดิ์ อำเภอศรีราชา จ.ชลบุรี 20110",
   mapUrl: null,
+  facebookUrl: "https://www.facebook.com/topformrealestateforinvesment/",
 };
 
 export default function ContactContent({ contact }: { contact: ContactSettingsItem | null }) {
@@ -24,20 +30,22 @@ export default function ContactContent({ contact }: { contact: ContactSettingsIt
 
   return (
     <div className="w-full min-w-0 max-w-3xl">
-      <div className="mb-6 md:mb-8">
-        <h1 className="font-bold text-xl md:text-2xl text-navy">ติดต่อทีมงาน Pool Villa Estate</h1>
-        <p className="text-gray-600 mt-1 md:text-base">
+      <div className="mb-5 sm:mb-6 md:mb-8">
+        <h1 className="font-bold text-xl sm:text-2xl md:text-3xl text-navy">
+          ติดต่อทีมงาน {c.companyName ?? c.companyNameEn ?? "ท๊อปฟอร์ม อสังหาริมทรัพย์"}
+        </h1>
+        <p className="text-gray-600 mt-1 text-sm sm:text-base">
           สำหรับนักลงทุนที่ต้องการข้อมูลเชิงลึก หรือนัดหมายดูบ้านแต่ละหลัง
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 md:gap-8 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-start">
         <section className="space-y-4">
           <div className="flex flex-col gap-3">
             {c.phone && (
               <a
                 href={telHref}
-                className="flex items-center justify-center gap-2 py-3 md:py-3.5 rounded-xl bg-blue text-white font-medium text-sm md:text-base"
+                className="flex items-center justify-center min-h-[48px] sm:min-h-[44px] gap-2 py-3 sm:py-3.5 rounded-xl bg-blue text-white font-medium text-sm sm:text-base active:opacity-90"
               >
                 โทรคุยกับทีมงาน
               </a>
@@ -47,7 +55,7 @@ export default function ContactContent({ contact }: { contact: ContactSettingsIt
                 href={lineHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 py-3 md:py-3.5 rounded-xl bg-[#06C755] text-white font-medium text-sm md:text-base"
+                className="flex items-center justify-center min-h-[48px] sm:min-h-[44px] gap-2 py-3 sm:py-3.5 rounded-xl bg-[#06C755] text-white font-medium text-sm sm:text-base active:opacity-90"
               >
                 ติดต่อผ่าน Line
               </a>
@@ -69,10 +77,13 @@ export default function ContactContent({ contact }: { contact: ContactSettingsIt
             </p>
           </div>
 
-          <div className="bg-offwhite rounded-2xl p-4 md:p-5">
-            <h2 className="font-semibold text-navy mb-2 md:text-base">ที่อยู่โครงการ</h2>
+          <div className="bg-offwhite rounded-2xl p-4 md:p-5 space-y-2">
+            {c.registrationNumber && (
+              <p className="text-gray-600 text-sm">เลขทะเบียน {c.registrationNumber}</p>
+            )}
+            <h2 className="font-semibold text-navy mb-2 md:text-base">ที่อยู่</h2>
             <p className="text-gray-600 text-sm md:text-base">
-              {c.address ?? "(ใส่ที่อยู่จริงของโครงการ หรือสำนักงาน และลิงก์ Google Map)"}
+              {c.address ?? "(ที่อยู่สำนักงาน)"}
             </p>
             {c.mapUrl && (
               <a
@@ -82,6 +93,16 @@ export default function ContactContent({ contact }: { contact: ContactSettingsIt
                 className="inline-block mt-2 text-blue text-sm font-medium hover:underline"
               >
                 เปิด Google Map
+              </a>
+            )}
+            {c.facebookUrl && (
+              <a
+                href={c.facebookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 mt-2 text-blue text-sm font-medium hover:underline"
+              >
+                เพจ Facebook
               </a>
             )}
           </div>

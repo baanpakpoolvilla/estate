@@ -20,11 +20,12 @@ model Villa {
   land               Int?
   description        String?
   mainVideoId        String?
+  imageUrl           String?  // รูปหลักสำหรับการ์ด/hero (ถ้าไม่มีใช้ YouTube thumb)
   tag                String?
   sortOrder          Int      @default(0)
   isPublished        Boolean  @default(true)
   areaVideos         Json?    // [{ label, youtubeId }]
-  gallery            Json?    // [{ label, area }]
+  gallery            Json?    // [{ label, area, imageUrl? }]
   rentalHistory      Json?    // [{ period, occupancy, avgRate, note? }]
   businessHistory    String?
   salePlan           String?
@@ -49,11 +50,31 @@ model ProjectPromo {
 }
 
 model ContactSettings {
-  id        String   @id @default(cuid())
-  phone     String?
-  email     String?
-  lineUrl   String?
-  address   String?
-  mapUrl    String?
-  updatedAt DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  logoUrl             String?  // โลโก้เว็บไซต์ (แสดงใน Header/Footer)
+  faviconUrl          String?  // ไอคอนแท็บเบราว์เซอร์
+  companyName         String?  // ชื่อบริษัท (ไทย)
+  companyNameEn       String?  // ชื่อบริษัท (อังกฤษ)
+  registrationNumber  String?  // เลขทะเบียนนิติบุคคล
+  phone               String?
+  email               String?
+  lineUrl             String?
+  address             String?
+  mapUrl              String?
+  facebookUrl         String?
+  updatedAt           DateTime @updatedAt
+}
+
+model Article {
+  id            String    @id @default(cuid())
+  title         String
+  slug          String    @unique
+  excerpt       String?
+  body          String    @db.Text
+  coverImageUrl String?
+  isPublished   Boolean   @default(false)
+  publishedAt   DateTime?
+  sortOrder     Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }

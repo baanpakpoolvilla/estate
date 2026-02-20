@@ -11,6 +11,7 @@ export type VillaListItem = {
   sqm: number;
   profitMonthly: string;
   mainVideoId: string;
+  imageUrl?: string | null;
   tag?: string | null;
 };
 
@@ -26,7 +27,7 @@ export type VillaDetail = {
   desc: string;
   mainVideoId: string;
   areaVideos: { label: string; youtubeId: string }[];
-  gallery: { label: string; area: string }[];
+  gallery: { label: string; area: string; imageUrls: string[] }[];
   rentalHistory: { period: string; occupancy: string; avgRate: string; note?: string }[];
   businessHistory: string;
   salePlan: string;
@@ -41,15 +42,42 @@ export type ProjectPromoItem = {
   location: string | null;
   badge: string | null;
   targetUrl: string | null;
+  imageUrl: string | null;
   href: string;
 };
 
 export type ContactSettingsItem = {
+  logoUrl: string | null;
+  faviconUrl: string | null;
+  companyName: string | null;
+  companyNameEn: string | null;
+  registrationNumber: string | null;
   phone: string | null;
   email: string | null;
   lineUrl: string | null;
   address: string | null;
   mapUrl: string | null;
+  facebookUrl: string | null;
+};
+
+export type ArticleListItem = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  coverImageUrl: string | null;
+  publishedAt: Date | null;
+};
+
+export type ArticleDetail = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  body: string;
+  coverImageUrl: string | null;
+  publishedAt: Date | null;
+  createdAt: Date;
 };
 
 function profitFromVilla(v: { investmentMonthly?: unknown }): string {
@@ -73,6 +101,7 @@ export async function getVillasForList(): Promise<VillaListItem[]> {
     sqm: v.sqm,
     profitMonthly: profitFromVilla(v),
     mainVideoId: v.mainVideoId ?? "",
+    imageUrl: v.imageUrl ?? null,
     tag: v.tag,
   }));
 }
@@ -83,12 +112,17 @@ export async function getVillaForDetail(id: string): Promise<VillaDetail | null>
   });
   if (!v) return null;
   const inv = (v.investmentMonthly as { revenue?: string; expenses?: string; profit?: string }) ?? {};
-  const areaVideos = (v.areaVideos as { label: string; youtubeId: string }[]) ?? [];
-  const gallery = (v.gallery as { label: string; area: string }[]) ?? [];
-  const rentalHistory =
-    (v.rentalHistory as { period: string; occupancy: string; avgRate: string; note?: string }[]) ?? [];
-  const accountingSummary =
-    (v.accountingSummary as { period: string; revenue: string; profit: string }[]) ?? [];
+  const areaVideosRaw = v.areaVideos as { label: string; youtubeId: string }[] | null | undefined;
+  const areaVideos = Array.isArray(areaVideosRaw) ? areaVideosRaw : [];
+  const galleryRaw = v.gallery as { label: string; area: string; imageUrl?: string; imageUrls?: string[] }[] | null | undefined;
+  const gallery = (Array.isArray(galleryRaw) ? galleryRaw : []).map((item) => ({
+    ...item,
+    imageUrls: Array.isArray(item.imageUrls) ? item.imageUrls : (item.imageUrl ? [item.imageUrl] : []),
+  }));
+  const rentalHistoryRaw = v.rentalHistory as { period: string; occupancy: string; avgRate: string; note?: string }[] | null | undefined;
+  const rentalHistory = Array.isArray(rentalHistoryRaw) ? rentalHistoryRaw : [];
+  const accountingSummaryRaw = v.accountingSummary as { period: string; revenue: string; profit: string }[] | null | undefined;
+  const accountingSummary = Array.isArray(accountingSummaryRaw) ? accountingSummaryRaw : [];
   return {
     name: v.name,
     location: v.location,
@@ -126,6 +160,7 @@ export async function getProjectPromos(): Promise<ProjectPromoItem[]> {
     location: p.location,
     badge: p.badge,
     targetUrl: p.targetUrl,
+    imageUrl: p.imageUrl ?? null,
     href: p.targetUrl ?? "/villas",
   }));
 }
@@ -134,10 +169,52 @@ export async function getContactSettings(): Promise<ContactSettingsItem | null> 
   const c = await prisma.contactSettings.findFirst({ orderBy: { updatedAt: "desc" } });
   if (!c) return null;
   return {
+    logoUrl: c.logoUrl,
+    faviconUrl: c.faviconUrl,
+    companyName: c.companyName,
+    companyNameEn: c.companyNameEn,
+    registrationNumber: c.registrationNumber,
     phone: c.phone,
     email: c.email,
     lineUrl: c.lineUrl,
     address: c.address,
     mapUrl: c.mapUrl,
+    facebookUrl: c.facebookUrl,
+  };
+}
+
+export async function getArticlesForList(): Promise<ArticleListItem[]> {
+  const list = await prisma.article.findMany({
+    where: { isPublished: true },
+    orderBy: [
+      { publishedAt: { sort: "desc", nulls: "last" } },
+      { sortOrder: "asc" },
+      { createdAt: "desc" },
+    ],
+  });
+  return list.map((a) => ({
+    id: a.id,
+    title: a.title,
+    slug: a.slug,
+    excerpt: a.excerpt,
+    coverImageUrl: a.coverImageUrl,
+    publishedAt: a.publishedAt,
+  }));
+}
+
+export async function getArticleBySlugOrId(slugOrId: string): Promise<ArticleDetail | null> {
+  const article = await prisma.article.findFirst({
+    where: { isPublished: true, OR: [{ slug: slugOrId }, { id: slugOrId }] },
+  });
+  if (!article) return null;
+  return {
+    id: article.id,
+    title: article.title,
+    slug: article.slug,
+    excerpt: article.excerpt,
+    body: article.body,
+    coverImageUrl: article.coverImageUrl,
+    publishedAt: article.publishedAt,
+    createdAt: article.createdAt,
   };
 }

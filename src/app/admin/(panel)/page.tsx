@@ -6,7 +6,7 @@ export default function AdminDashboardPage() {
       <div className="mb-6 md:mb-8">
         <h1 className="font-bold text-xl md:text-2xl text-navy">แดชบอร์ดผู้ดูแลระบบ</h1>
         <p className="text-gray-600 mt-1 md:text-base">
-          จัดการข้อมูลพูลวิลล่า โครงการโฆษณา และช่องทางติดต่อของ Pool Villa Estate
+          จัดการข้อมูลพูลวิลล่า โครงการโฆษณา และช่องทางติดต่อของ ท๊อปฟอร์ม อสังหาริมทรัพย์
         </p>
       </div>
 
@@ -32,12 +32,12 @@ export default function AdminDashboardPage() {
         </section>
 
         <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
-          <h2 className="font-semibold text-navy mb-2 md:text-lg">ช่องทางติดต่อ</h2>
+          <h2 className="font-semibold text-navy mb-2 md:text-lg">ตั้งค่าเว็บไซต์</h2>
           <p className="text-gray-600 text-sm md:text-base mb-3">
-            แก้ไขเบอร์โทร อีเมล Line และที่อยู่ที่ใช้แสดงบนเว็บไซต์
+            โลโก้ ข้อมูลพื้นฐาน และช่องทางติดต่อที่ใช้แสดงบนเว็บไซต์
           </p>
-          <Link href="/admin/contact-settings" className="text-blue text-sm font-medium hover:underline">
-            ไปที่ตั้งค่าช่องทางติดต่อ
+          <Link href="/admin/settings" className="text-blue text-sm font-medium hover:underline">
+            ไปที่ตั้งค่าเว็บไซต์
           </Link>
         </section>
       </div>

@@ -1,20 +1,32 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "ลงทุนกับเรา",
+  description:
+    "ลงทุนพูลวิลล่ากับผู้เชี่ยวชาญ เข้าถึงโอกาสที่คนอื่นเข้าถึงไม่ได้ จองล่วงหน้า ซื้อขายล่วงหน้า รับเงินได้ทันที",
+  openGraph: {
+    title: "ลงทุนกับเรา | ท๊อปฟอร์ม อสังหาริมทรัพย์",
+    description: "ลงทุนพูลวิลล่ากับผู้เชี่ยวชาญ เข้าถึงดีลพิเศษ",
+  },
+  alternates: { canonical: "/investment" },
+};
 
 export default function InvestmentPage() {
   return (
     <div className="w-full min-w-0">
-      <div className="mb-6 md:mb-8">
-        <h1 className="font-bold text-xl md:text-2xl lg:text-3xl text-navy">
+      <div className="mb-5 sm:mb-6 md:mb-8">
+        <h1 className="font-bold text-xl sm:text-2xl md:text-3xl text-navy">
           ลงทุนพูลวิลล่ากับผู้เชี่ยวชาญ
         </h1>
-        <p className="text-gray-600 mt-1 md:text-lg">
+        <p className="text-gray-600 mt-1 text-sm sm:text-base md:text-lg">
           เข้าถึงโอกาสที่คนอื่นเข้าถึงไม่ได้ จองล่วงหน้า ซื้อขายล่วงหน้า รับเงินได้ทันที
         </p>
       </div>
 
-      <div className="space-y-6 md:space-y-10">
+      <div className="space-y-5 sm:space-y-6 md:space-y-10">
         {/* ข้อความหลัก: เราคือผู้เชี่ยวชาญ เข้าถึงได้ที่อื่นไม่มี */}
-        <section className="bg-navy text-white rounded-2xl p-5 md:p-6 lg:p-8">
+        <section className="bg-navy text-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 lg:p-8">
           <h2 className="font-semibold text-lg md:text-xl mb-4">
             เราคือผู้เชี่ยวชาญที่เข้าถึงพูลวิลล่าที่คนอื่นไม่สามารถเข้าถึงได้
           </h2>
@@ -31,7 +43,7 @@ export default function InvestmentPage() {
         </section>
 
         {/* จองล่วงหน้า / ซื้อขายล่วงหน้า */}
-        <section className="bg-white rounded-2xl p-5 md:p-6 shadow-sm border border-gray-100">
+        <section className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-sm border border-gray-100">
           <h2 className="font-semibold text-navy text-lg md:text-xl mb-3">
             จองล่วงหน้า ซื้อขายล่วงหน้า ได้กับเรา
           </h2>
@@ -47,7 +59,7 @@ export default function InvestmentPage() {
         </section>
 
         {/* ลงทุนรับเงินได้เลย ไม่มีช่องว่าง */}
-        <section className="bg-white rounded-2xl p-5 md:p-6 shadow-sm border border-gray-100">
+        <section className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-sm border border-gray-100">
           <h2 className="font-semibold text-navy text-lg md:text-xl mb-3">
             ลงทุนรับเงินได้เลย ไม่ต้องมีช่องว่าง
           </h2>
@@ -63,7 +75,7 @@ export default function InvestmentPage() {
         </section>
 
         {/* ไม่ใช่บ้านขายไม่ออก / ตลาดไม่ต้องการ */}
-        <section className="bg-offwhite rounded-2xl p-5 md:p-6 border border-gray-100">
+        <section className="bg-offwhite rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-gray-100">
           <h2 className="font-semibold text-navy text-lg md:text-xl mb-3">
             โอกาสคุณภาพ ไม่ใช่สินค้าค้างหรือที่ตลาดไม่ต้องการ
           </h2>
@@ -80,7 +92,7 @@ export default function InvestmentPage() {
         </section>
 
         {/* ตัวเลขรวมโครงการ (คงไว้แบบย่อ) */}
-        <section className="bg-white rounded-2xl p-5 md:p-6 shadow-sm border border-gray-100">
+        <section className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-sm border border-gray-100">
           <h2 className="font-semibold text-navy mb-3 md:text-lg">ตัวเลขรวมโครงการ</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             {[

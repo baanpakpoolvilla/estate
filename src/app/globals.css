@@ -9,15 +9,66 @@
   --offwhite: #F5F7FA;
 }
 
-html {
-  -webkit-text-size-adjust: 100%;
-  overflow-x: hidden;
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+  body {
+    font-family: var(--font-sarabun), ui-sans-serif, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #F5F7FA !important;
+    color: #0B1F3B !important;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    overflow-x: hidden;
+    min-width: 0;
+  }
 }
 
-body {
-  @apply font-sarabun antialiased bg-offwhite text-navy;
-  padding-bottom: env(safe-area-inset-bottom, 0);
-  overflow-x: hidden;
-  min-width: 0;
+/* ช่อง input/textarea ให้ focus ชัด */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(30, 136, 229, 0.3);
+  border-color: var(--blue);
+}
+
+/* เนื้อหาบทความจาก Quill (HTML) */
+.article-body-html img {
+  border-radius: 0.75rem;
+  max-width: 100%;
+  height: auto;
+  margin: 1rem 0;
+}
+.article-body-html p {
+  margin-bottom: 0.75rem;
+}
+.article-body-html h2 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+.article-body-html h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+.article-body-html ul,
+.article-body-html ol {
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+}
+
+/* ซ่อน scrollbar แนวนอนบนมือถือ (Quick stats) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 

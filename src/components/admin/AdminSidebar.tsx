@@ -8,7 +8,8 @@ const navItems = [
   { href: "/admin", label: "แดชบอร์ด" },
   { href: "/admin/villas", label: "จัดการพูลวิลล่า" },
   { href: "/admin/projects", label: "จัดการโฆษณา/โครงการ" },
-  { href: "/admin/contact-settings", label: "ช่องทางติดต่อ" },
+  { href: "/admin/articles", label: "จัดการบทความ" },
+  { href: "/admin/settings", label: "ตั้งค่าเว็บไซต์" },
 ];
 
 export default function AdminSidebar() {
@@ -41,7 +42,7 @@ export default function AdminSidebar() {
           แผงควบคุมผู้ดูแลระบบ
         </p>
         <p className="text-gray-500 text-xs md:text-sm">
-          จัดการข้อมูลบนเว็บไซต์ Pool Villa Estate
+          จัดการข้อมูลบนเว็บไซต์ ท๊อปฟอร์ม อสังหาริมทรัพย์
         </p>
       </div>
       <nav className="space-y-1 mb-4">

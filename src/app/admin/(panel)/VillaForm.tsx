@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ImageUploadField from "@/components/admin/ImageUploadField";
 
 export type VillaFormData = {
   name: string;
@@ -13,11 +14,12 @@ export type VillaFormData = {
   land: number | "";
   description: string;
   mainVideoId: string;
+  imageUrl: string;
   tag: string;
   sortOrder: number;
   isPublished: boolean;
   areaVideos: { label: string; youtubeId: string }[];
-  gallery: { label: string; area: string }[];
+  gallery: { label: string; area: string; imageUrls: string[] }[];
   rentalHistory: string;
   businessHistory: string;
   salePlan: string;
@@ -36,6 +38,7 @@ const defaultValues: VillaFormData = {
   land: "",
   description: "",
   mainVideoId: "",
+  imageUrl: "",
   tag: "",
   sortOrder: 0,
   isPublished: true,
@@ -72,11 +75,16 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
         JSON.stringify(initial.areaVideos ?? []),
         []
       ) ?? [];
-    const parsedGallery =
-      safeJsonParse<{ label: string; area: string }[]>(
+    const rawGallery =
+      safeJsonParse<{ label: string; area: string; imageUrl?: string; imageUrls?: string[] }[]>(
         JSON.stringify(initial.gallery ?? []),
         []
       ) ?? [];
+    const parsedGallery = rawGallery.map((g) => ({
+      label: g.label ?? "",
+      area: g.area ?? "",
+      imageUrls: Array.isArray(g.imageUrls) ? g.imageUrls.slice(0, 5) : g.imageUrl ? [g.imageUrl] : [],
+    }));
     return {
       name: String(initial.name ?? ""),
       location: String(initial.location ?? ""),
@@ -88,6 +96,7 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
       land: initial.land != null ? Number(initial.land) : "",
       description: String(initial.description ?? ""),
       mainVideoId: String(initial.mainVideoId ?? ""),
+      imageUrl: String(initial.imageUrl ?? ""),
       tag: String(initial.tag ?? ""),
       sortOrder: Number(initial.sortOrder) || 0,
       isPublished: initial.isPublished !== false,
@@ -121,11 +130,12 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
         land: form.land === "" ? null : form.land,
         description: form.description || null,
         mainVideoId: form.mainVideoId || null,
+        imageUrl: form.imageUrl || null,
         tag: form.tag || null,
         sortOrder: form.sortOrder,
         isPublished: form.isPublished,
         areaVideos: form.areaVideos,
-        gallery: form.gallery,
+        gallery: form.gallery.map((g) => ({ label: g.label, area: g.area, imageUrls: g.imageUrls.slice(0, 5) })),
         rentalHistory: safeJsonParse(form.rentalHistory, []),
         businessHistory: form.businessHistory || null,
         salePlan: form.salePlan || null,
@@ -140,7 +150,7 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl min-w-0">
       {error && (
         <div className="p-3 rounded-xl bg-red-50 text-red-700 text-sm">{error}</div>
       )}
@@ -245,6 +255,13 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
             onChange={(e) => update("mainVideoId", e.target.value)}
             placeholder="dQw4w9WgXcQ"
             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-navy"
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <ImageUploadField
+            label="รูปหลัก (ใช้แสดงในการ์ด/หน้ารายการ แทน thumbnail จาก YouTube)"
+            value={form.imageUrl}
+            onChange={(url) => update("imageUrl", url)}
           />
         </div>
         <div>
@@ -358,8 +375,8 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
       </section>
 
       {/* แกลลอรี่รูปภาพ */}
-      <section className="border border-gray-200 rounded-xl p-4 space-y-3">
-        <div className="flex items-center justify-between gap-2">
+      <section className="border border-gray-200 rounded-xl p-4 md:p-5 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-medium text-navy text-sm md:text-base">
             แกลลอรี่รูปภาพแต่ละส่วน
           </h2>
@@ -368,10 +385,10 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
             onClick={() =>
               update("gallery", [
                 ...form.gallery,
-                { label: "", area: "" },
+                { label: "", area: "", imageUrls: [] },
               ])
             }
-            className="px-3 py-1.5 rounded-lg bg-offwhite text-xs md:text-sm text-navy font-medium border border-gray-200"
+            className="px-3 py-2 rounded-lg bg-offwhite text-sm text-navy font-medium border border-gray-200 hover:bg-gray-100"
           >
             + เพิ่มรูปภาพ
           </button>
@@ -381,54 +398,92 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
             ยังไม่มีรายการแกลลอรี่ – ใช้สำหรับตั้งชื่อมุมต่าง ๆ (เช่น สระว่ายน้ำ, ห้องนั่งเล่น, ห้องนอนหลัก)
           </p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {form.gallery.map((g, idx) => (
               <div
                 key={idx}
-                className="grid gap-2 sm:grid-cols-[1.2fr_1fr_auto] items-center"
+                className="border border-gray-200 rounded-xl bg-gray-50/50 p-4 space-y-4"
               >
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    ชื่อรูปภาพ / มุมมอง
-                  </label>
-                  <input
-                    type="text"
-                    value={g.label}
-                    onChange={(e) => {
-                      const next = [...form.gallery];
-                      next[idx] = { ...next[idx], label: e.target.value };
+                <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-center">
+                  <div className="min-w-0">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">ชื่อรูปภาพ / มุมมอง</label>
+                    <input
+                      type="text"
+                      value={g.label}
+                      onChange={(e) => {
+                        const next = [...form.gallery];
+                        next[idx] = { ...next[idx], label: e.target.value };
+                        update("gallery", next);
+                      }}
+                      placeholder="เช่น สระว่ายน้ำริมทะเล"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-navy text-sm bg-white"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">พื้นที่</label>
+                    <input
+                      type="text"
+                      value={g.area}
+                      onChange={(e) => {
+                        const next = [...form.gallery];
+                        next[idx] = { ...next[idx], area: e.target.value };
+                        update("gallery", next);
+                      }}
+                      placeholder="ด้านนอก, ภายในบ้าน"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-navy text-sm bg-white"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = form.gallery.filter((_, i) => i !== idx);
                       update("gallery", next);
                     }}
-                    placeholder="เช่น สระว่ายน้ำริมทะเล"
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-navy text-sm"
-                  />
+                    className="self-end sm:self-center justify-self-start text-red-600 text-sm font-medium hover:underline py-2"
+                  >
+                    ลบรายการ
+                  </button>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    พื้นที่ (ภายในบ้าน / ด้านนอก ฯลฯ)
-                  </label>
-                  <input
-                    type="text"
-                    value={g.area}
-                    onChange={(e) => {
-                      const next = [...form.gallery];
-                      next[idx] = { ...next[idx], area: e.target.value };
-                      update("gallery", next);
-                    }}
-                    placeholder="เช่น ด้านนอก, ภายในบ้าน"
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-navy text-sm"
-                  />
+                  <p className="text-xs font-medium text-gray-700 mb-2">
+                    รูปภาพ (อัปโหลดได้มากกว่า 1 รูป แต่ไม่เกิน 5 รูป) — {g.imageUrls.length}/5
+                  </p>
+                  <div className="flex flex-wrap gap-3 items-center">
+                    {g.imageUrls.map((url, uIdx) => (
+                      <div key={uIdx} className="relative shrink-0">
+                        <div className="w-20 h-20 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm">
+                          <img src={url} alt="" className="w-full h-full object-cover" />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const next = [...form.gallery];
+                            const urls = next[idx].imageUrls.filter((_, i) => i !== uIdx);
+                            next[idx] = { ...next[idx], imageUrls: urls };
+                            update("gallery", next);
+                          }}
+                          className="absolute -top-0.5 -right-0.5 w-6 h-6 rounded-full bg-red-500 text-white text-sm leading-none flex items-center justify-center hover:bg-red-600 shadow"
+                          title="ลบรูป"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                    {g.imageUrls.length < 5 && (
+                      <div className="shrink-0">
+                        <ImageUploadField
+                          label=""
+                          value=""
+                          onChange={(url) => {
+                            const next = [...form.gallery];
+                            next[idx] = { ...next[idx], imageUrls: [...next[idx].imageUrls, url].slice(0, 5) };
+                            update("gallery", next);
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const next = form.gallery.filter((_, i) => i !== idx);
-                    update("gallery", next);
-                  }}
-                  className="mt-5 text-xs text-red-600 hover:underline"
-                >
-                  ลบ
-                </button>
               </div>
             ))}
           </div>

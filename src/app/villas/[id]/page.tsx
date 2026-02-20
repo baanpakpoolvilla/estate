@@ -1,22 +1,78 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getVillaForDetail, getContactSettings } from "@/lib/data";
+
+type Params = { id: string };
+
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://topform-realestate.com");
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<Params> | Params;
+}): Promise<Metadata> {
+  const { id } = await Promise.resolve(params);
+  try {
+    const villa = await getVillaForDetail(id);
+    if (!villa) return { title: "ไม่พบบ้าน" };
+    const title = `${villa.name} | พูลวิลล่า ${villa.location}`;
+    const description =
+      villa.desc ||
+      `พูลวิลล่า ${villa.name} ทำเล${villa.location} ราคา ฿${villa.price} ลบ. ROI ~${villa.roi}% กำไรประมาณ ${villa.investmentMonthly.profit}/เดือน`;
+    return {
+      title,
+      description,
+      openGraph: {
+        title: `${title} | ท๊อปฟอร์ม อสังหาริมทรัพย์`,
+        description,
+      },
+      alternates: { canonical: `/villas/${id}` },
+    };
+  } catch {
+    return { title: "ไม่พบบ้าน" };
+  }
+}
 
 export default async function VillaDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<Params> | Params;
 }) {
-  const { id } = await params;
-  const [villa, contact] = await Promise.all([
-    getVillaForDetail(id),
-    getContactSettings(),
-  ]);
+  const { id } = await Promise.resolve(params);
+  let villa: Awaited<ReturnType<typeof getVillaForDetail>> = null;
+  let contact: Awaited<ReturnType<typeof getContactSettings>> = null;
+  try {
+    const [vData, cData] = await Promise.all([
+      getVillaForDetail(id),
+      getContactSettings(),
+    ]);
+    villa = vData;
+    contact = cData;
+  } catch {
+    notFound();
+  }
   if (!villa) notFound();
   const telHref = contact?.phone ? `tel:${contact.phone.replace(/\D/g, "")}` : "tel:0812345678";
 
+  const villaJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "RealEstateListing",
+    name: villa.name,
+    description: villa.desc || undefined,
+    address: { "@type": "PostalAddress", addressLocality: villa.location },
+    ...(villa.land && { numberOfRooms: villa.beds }),
+    url: `${siteUrl}/villas/${id}`,
+  };
+
   return (
     <div className="w-full min-w-0 space-y-8 md:space-y-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(villaJsonLd) }}
+      />
       {/* ส่วนบน: ปุ่มกลับและติดต่อด่วน */}
       <div className="flex items-center justify-between">
         <Link href="/villas" className="text-blue text-sm font-medium hover:underline">
@@ -118,22 +174,32 @@ export default async function VillaDetailPage({
           <div className="space-y-3">
             <h3 className="font-medium text-navy">รูปภาพไฮไลต์แต่ละส่วน</h3>
             <div className="grid grid-cols-2 gap-3">
-              {villa.gallery.map((item) => (
-                <div
-                  key={`${item.label}-${item.area}`}
-                  className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm"
-                >
-                  <div className="aspect-[4/3] bg-gradient-to-br from-blue/10 to-navy/20" />
-                  <div className="p-2">
-                    <p className="text-xs font-medium text-navy truncate">{item.label}</p>
-                    <p className="text-[11px] text-gray-500 truncate">{item.area}</p>
+              {villa.gallery.map((item, idx) => {
+                const urls = item.imageUrls ?? [];
+                return (
+                  <div
+                    key={`gallery-item-${idx}-${String(item.label)}-${String(item.area)}`}
+                    className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm"
+                  >
+                    {urls.length > 0 ? (
+                      <div className="grid grid-cols-2 gap-0.5 aspect-[4/3] bg-gray-100">
+                        {urls.slice(0, 4).map((url, uIdx) => (
+                          <div key={uIdx} className="relative min-h-0">
+                            <img src={url} alt="" className="w-full h-full object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="aspect-[4/3] bg-gradient-to-br from-blue/10 to-navy/20" />
+                    )}
+                    <div className="p-2">
+                      <p className="text-xs font-medium text-navy truncate">{item.label}</p>
+                      <p className="text-[11px] text-gray-500 truncate">{item.area}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-            <p className="text-xs text-gray-500">
-              * สามารถแนบรูปจริงความละเอียดสูงเพิ่มเติม เพื่อใช้ประกอบการตัดสินใจของนักลงทุน
-            </p>
           </div>
         </div>
       </section>
@@ -142,12 +208,23 @@ export default async function VillaDetailPage({
       <section className="space-y-3">
         <h2 className="font-semibold text-navy text-lg md:text-xl">แกลลอรี่ภาพรวมของบ้าน</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          {Array.from({ length: 8 }).map((_, idx) => (
-            <div
-              key={idx}
-              className="aspect-[4/3] rounded-xl bg-gradient-to-br from-blue/15 via-offwhite to-navy/20 border border-gray-100"
-            />
-          ))}
+          {(() => {
+            const allUrls: { url: string; label: string }[] = [];
+            villa.gallery.forEach((item) => {
+              const urls = item.imageUrls ?? [];
+              urls.forEach((url) => allUrls.push({ url, label: item.label || item.area || "" }));
+            });
+            if (allUrls.length > 0) {
+              return allUrls.map(({ url, label }, idx) => (
+                <div key={`gallery-${idx}-${url}`} className="aspect-[4/3] rounded-xl overflow-hidden border border-gray-100 bg-gray-100">
+                  <img src={url} alt={label || "รูปแกลลอรี่"} className="w-full h-full object-cover" />
+                </div>
+              ));
+            }
+            return Array.from({ length: 8 }).map((_, idx) => (
+              <div key={idx} className="aspect-[4/3] rounded-xl bg-gradient-to-br from-blue/15 via-offwhite to-navy/20 border border-gray-100" />
+            ));
+          })()}
         </div>
       </section>
 
