@@ -179,18 +179,15 @@ export default async function VillaDetailPage({
             <div className="grid grid-cols-2 gap-3">
               {villa.gallery.map((item, idx) => {
                 const urls = item.imageUrls ?? [];
+                const firstUrl = urls[0];
                 return (
                   <div
                     key={`gallery-item-${idx}-${String(item.label)}-${String(item.area)}`}
                     className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm"
                   >
-                    {urls.length > 0 ? (
-                      <div className="grid grid-cols-2 gap-0.5 aspect-[4/3] bg-gray-100">
-                        {urls.slice(0, 4).map((url, uIdx) => (
-                          <div key={uIdx} className="relative min-h-0">
-                            <img src={url} alt="" className="w-full h-full object-cover" />
-                          </div>
-                        ))}
+                    {firstUrl ? (
+                      <div className="aspect-[4/3] bg-gray-100">
+                        <img src={firstUrl} alt={item.label || ""} className="w-full h-full object-cover" />
                       </div>
                     ) : (
                       <div className="aspect-[4/3] bg-gradient-to-br from-blue/10 to-navy/20" />
