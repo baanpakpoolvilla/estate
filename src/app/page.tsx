@@ -49,26 +49,6 @@ export default async function HomePage() {
       {/* Hero - สไลด์บ้านแนะนำ */}
       <HeroSlider villas={heroVillas} />
 
-      {/* Quick stats - มือถือ: scroll แนวนอน, แท็บเล็ตขึ้นไป: grid */}
-      <section className="mt-4 sm:mt-6 md:mt-8">
-        <div className="flex gap-3 overflow-x-auto overflow-y-hidden pb-2 sm:pb-0 md:overflow-visible md:grid md:grid-cols-3 md:gap-4 scroll-smooth snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-          {[
-            { label: "ROI เฉลี่ย", value: "8–10%", unit: "ต่อปี" },
-            { label: "คืนทุนประมาณ", value: "10–12", unit: "ปี" },
-            { label: "วิลล่า", value: "24", unit: "หลัง" },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="flex-shrink-0 w-[140px] xs:w-36 sm:w-auto sm:flex-1 md:flex-none snap-start bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 border border-gray-100"
-            >
-              <p className="text-gray-500 text-[10px] sm:text-xs mb-0.5">{item.label}</p>
-              <p className="text-navy font-bold text-base sm:text-lg md:text-xl">{item.value}</p>
-              <p className="text-gray-600 text-[10px] sm:text-xs">{item.unit}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Featured villas - การ์ดสไตล์เดียวกับหน้ารายการบ้าน */}
       <section className="mt-6 sm:mt-8 md:mt-10">
         <div className="flex items-center justify-between mb-3 sm:mb-4">

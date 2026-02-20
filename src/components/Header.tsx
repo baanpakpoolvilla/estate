@@ -16,9 +16,15 @@ const navItems = [
 export default function Header({ contact }: { contact?: ContactSettingsItem | null }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const tel =
     contact?.phone?.replace(/\D/g, "") ||
     "0812345678";
+
+  // ใช้หลัง mount เท่านั้น เพื่อไม่ให้ server กับ client เรนเดอร์ต่างกัน (แก้ hydration error)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // ปิด sidebar เมื่อเปลี่ยน route (กดเลือกเมนู)
   useEffect(() => {
@@ -40,8 +46,12 @@ export default function Header({ contact }: { contact?: ContactSettingsItem | nu
   return (
     <header className="sticky top-0 z-50 w-full bg-navy text-white shadow-md safe-top">
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-5 md:px-6 flex items-center justify-between min-h-[56px] sm:min-h-[60px] md:min-h-[64px]">
-        <Link href="/" className="flex items-center gap-2 font-semibold text-base sm:text-lg md:text-xl text-white hover:text-white/90 shrink-0 min-h-[44px]">
-          {contact?.logoUrl ? (
+        <Link
+          href="/"
+          className="flex items-center gap-2 font-semibold text-base sm:text-lg md:text-xl text-white hover:text-white/90 shrink-0 min-h-[44px]"
+        >
+          {/* ตอนยังไม่ mount แสดงเฉพาะข้อความ เพื่อให้ server กับ client ตรงกัน (แก้ hydration) */}
+          {mounted && contact?.logoUrl ? (
             <img src={contact.logoUrl} alt="" className="h-7 sm:h-8 md:h-9 w-auto max-w-[120px] xs:max-w-[140px] sm:max-w-[160px] md:max-w-[180px] object-contain" />
           ) : (
             <span className="truncate max-w-[140px] xs:max-w-[180px] sm:max-w-none">
@@ -50,8 +60,8 @@ export default function Header({ contact }: { contact?: ContactSettingsItem | nu
           )}
         </Link>
 
-        {/* Desktop เท่านั้น: เมนูแนวนอน (xl = 1280px ขึ้นไป) */}
-        <nav className="hidden xl:flex items-center justify-end gap-1 md:gap-2">
+        {/* Desktop เท่านั้น: เมนูแนวนอน (lg = 1024px ขึ้นไป) */}
+        <nav className="hidden lg:flex items-center justify-end gap-1 md:gap-2">
           {navItems.map(({ href, label }) => {
             const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
             return (
@@ -74,13 +84,13 @@ export default function Header({ contact }: { contact?: ContactSettingsItem | nu
           </a>
         </nav>
 
-        {/* Mobile + Tablet: ปุ่มเบอร์เกอร์ (แสดงเมื่อจอเล็กกว่า xl = 1280px) */}
+        {/* Mobile + Tablet: ปุ่มเบอร์เกอร์ (แสดงเมื่อจอเล็กกว่า lg = 1024px) */}
         <button
           type="button"
           aria-label="เปิดเมนู"
           aria-expanded={sidebarOpen}
           onClick={() => setSidebarOpen(true)}
-          className="xl:hidden flex flex-col justify-center items-center w-12 h-12 rounded-lg text-white hover:bg-white/10 active:bg-white/15 transition-colors"
+          className="lg:hidden flex flex-col justify-center items-center w-12 h-12 rounded-lg text-white hover:bg-white/10 active:bg-white/15 transition-colors"
         >
           <span className="w-6 h-0.5 bg-current rounded-full block mb-1.5" />
           <span className="w-6 h-0.5 bg-current rounded-full block mb-1.5" />
@@ -93,7 +103,7 @@ export default function Header({ contact }: { contact?: ContactSettingsItem | nu
         role="presentation"
         aria-hidden={!sidebarOpen}
         onClick={() => setSidebarOpen(false)}
-        className={`xl:hidden fixed inset-0 z-[60] bg-black/50 transition-opacity duration-300 ${
+        className={`lg:hidden fixed inset-0 z-[60] bg-black/50 transition-opacity duration-300 ${
           sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
       />
@@ -102,7 +112,7 @@ export default function Header({ contact }: { contact?: ContactSettingsItem | nu
       <aside
         aria-label="เมนูนำทาง"
         aria-hidden={!sidebarOpen}
-        className={`xl:hidden fixed top-0 left-0 z-[70] h-full w-[min(280px,85vw)] max-w-[280px] bg-navy shadow-xl flex flex-col transition-transform duration-300 ease-out safe-top ${
+        className={`lg:hidden fixed top-0 left-0 z-[70] h-full w-[min(280px,85vw)] max-w-[280px] bg-navy shadow-xl flex flex-col transition-transform duration-300 ease-out safe-top ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
