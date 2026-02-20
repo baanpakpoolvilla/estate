@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/articles" },
 };
 
+// ให้ Vercel/production ดึงข้อมูลจาก DB ทุกครั้ง เหมือน localhost
+export const dynamic = "force-dynamic";
+
 function formatDate(d: Date | string | null | undefined): string {
   if (d == null) return "";
   const date = typeof d === "string" ? new Date(d) : d;

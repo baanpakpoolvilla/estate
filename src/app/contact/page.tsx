@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/contact" },
 };
 
+// ให้ Vercel/production ดึงข้อมูลจาก DB ทุกครั้ง เหมือน localhost
+export const dynamic = "force-dynamic";
+
 export default async function ContactPage() {
   let contact: Awaited<ReturnType<typeof getContactSettings>> = null;
   try {

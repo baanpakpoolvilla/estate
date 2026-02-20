@@ -25,14 +25,16 @@
 
 ---
 
-## 3. เตรียมสำหรับ Database (ทำภายหลัง)
+## 3. Environment Variables (ให้ production เหมือน localhost)
 
-เมื่อจะเชื่อม Database (เช่น Vercel Postgres, Supabase, PlanetScale):
+**ถ้าไม่ตั้งค่า** หน้าเว็บบน Vercel จะไม่มีข้อมูลจาก DB (รายการบ้าน, บทความ, โลโก้/ช่องทางติดต่อ) เพราะทุกหน้าที่ดึงข้อมูลใช้ **force-dynamic** = โหลดจาก DB ทุกครั้ง
 
 1. ใน Vercel: ไปที่ **Project → Settings → Environment Variables**
-2. เพิ่มตัวแปรที่ใช้ในโค้ด เช่น:
-   - `DATABASE_URL` – connection string ของ DB
-   - อื่นๆ ตามที่ backend ใช้
-3. **Redeploy** หนึ่งครั้งหลังเพิ่ม env เพื่อให้ตัวแปรมีผล
+2. เพิ่มตัวแปรให้ตรงกับที่รันบนเครื่อง (ดูจาก `.env.example`):
+   - **`DATABASE_URL`** – connection string ของ PostgreSQL (เช่น Supabase Pooler URL)
+   - **`DIRECT_URL`** – direct connection (เช่น Supabase Session URL) สำหรับ Prisma
+   - **`NEXT_PUBLIC_SITE_URL`** (ถ้ามี) – URL หลักของเว็บ เช่น `https://yourdomain.com` ใช้กับ sitemap, Open Graph
+   - อัปโหลดรูปแอดมิน: **`NEXT_PUBLIC_SUPABASE_URL`**, **`SUPABASE_SERVICE_ROLE_KEY`**
+3. กด **Save** แล้วไปที่ **Deployments** → เลือก deployment ล่าสุด → **Redeploy** เพื่อให้ env มีผล
 
-ในโปรเจกต์มีไฟล์ `.env.example` ไว้เป็นตัวอย่างชื่อตัวแปรที่อาจใช้เมื่อทำ database
+โปรเจกต์ตั้งค่า `export const dynamic = "force-dynamic"` ให้หน้าหลัก, villas, articles, contact, sitemap แล้ว ดังนั้นหลังตั้ง env และ redeploy ผลบน production จะดึงข้อมูลจาก DB แบบเดียวกับ localhost

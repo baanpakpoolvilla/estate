@@ -1,6 +1,9 @@
 import type { MetadataRoute } from "next";
 import { getVillasForList, getArticlesForList } from "@/lib/data";
 
+// ให้ sitemap ดึงข้อมูลจาก DB ทุกครั้งบน production
+export const dynamic = "force-dynamic";
+
 const baseUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://topform-realestate.com");

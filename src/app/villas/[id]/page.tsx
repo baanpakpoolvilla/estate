@@ -9,6 +9,9 @@ const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://topform-realestate.com");
 
+// ให้ Vercel/production ดึงข้อมูลจาก DB ทุกครั้ง เหมือน localhost
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: {
