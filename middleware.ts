@@ -1,22 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { updateSession } from "@/lib/supabase/middleware";
 
-const COOKIE_NAME = "adminAuth";
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
-    const session = request.cookies.get(COOKIE_NAME)?.value;
-    if (!session) {
-      const loginUrl = new URL("/admin/login", request.url);
-      return NextResponse.redirect(loginUrl);
-    }
+  if (pathname.startsWith("/admin")) {
+    return await updateSession(request);
   }
-
   return NextResponse.next();
 }
 
 export const config = {
   matcher: ["/admin/:path*"],
 };
-

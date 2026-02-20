@@ -35,6 +35,9 @@
    - **`DIRECT_URL`** – direct connection (เช่น Supabase Session URL) สำหรับ Prisma
    - **`NEXT_PUBLIC_SITE_URL`** (ถ้ามี) – URL หลักของเว็บ เช่น `https://yourdomain.com` ใช้กับ sitemap, Open Graph
    - อัปโหลดรูปแอดมิน: **`NEXT_PUBLIC_SUPABASE_URL`**, **`SUPABASE_SERVICE_ROLE_KEY`**
+   - **ล็อกอินแอดมิน (Supabase Auth)**: **`NEXT_PUBLIC_SUPABASE_ANON_KEY`** (หรือ `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`), **`ADMIN_EMAIL`** หรือ **`ADMIN_EMAILS`** (อีเมลที่อนุญาตเข้าแอดมิน คั่นด้วย comma)
 3. กด **Save** แล้วไปที่ **Deployments** → เลือก deployment ล่าสุด → **Redeploy** เพื่อให้ env มีผล
+
+**หมายเหตุ:** ถ้าใช้ล็อกอินด้วย GitHub ต้องเพิ่ม Redirect URL ใน Supabase Dashboard → Authentication → URL Configuration เช่น `https://yourdomain.com/auth/callback`
 
 โปรเจกต์ตั้งค่า `export const dynamic = "force-dynamic"` ให้หน้าหลัก, villas, articles, contact, sitemap แล้ว ดังนั้นหลังตั้ง env และ redeploy ผลบน production จะดึงข้อมูลจาก DB แบบเดียวกับ localhost
