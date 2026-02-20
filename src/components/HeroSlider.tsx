@@ -11,6 +11,8 @@ export type HeroVilla = {
   roi: string;
   profitMonthly?: string;
   tag?: string;
+  imageUrl?: string | null;
+  mainVideoId?: string;
 };
 
 const SLIDE_INTERVAL_MS = 5000;
@@ -41,8 +43,14 @@ export default function HeroSlider({ villas }: { villas: HeroVilla[] }) {
             i === current ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-blue/40 via-navy/60 to-navy" />
-          <div className="absolute inset-0 bg-gradient-to-t from-navy via-transparent to-transparent" />
+          {(villa.imageUrl || villa.mainVideoId) && (
+            <img
+              src={villa.imageUrl || `https://img.youtube.com/vi/${villa.mainVideoId}/maxresdefault.jpg`}
+              alt={villa.name}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-navy/80 via-navy/30 to-navy/10" />
           <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-5 md:p-6 lg:p-8 text-white">
             {villa.tag && (
               <span className="absolute top-2 right-2 sm:top-3 sm:right-3 px-2 py-1 rounded-lg bg-white/95 text-navy text-[10px] sm:text-xs font-medium">

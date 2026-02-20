@@ -40,6 +40,8 @@ export default async function HomePage() {
     roi: v.roi,
     profitMonthly: v.profitMonthly,
     tag: v.tag ?? undefined,
+    imageUrl: v.imageUrl,
+    mainVideoId: v.mainVideoId,
   }));
   const featuredVillas = villasList.slice(0, 3);
   const featuredArticles = articlesList.slice(0, 3);
@@ -111,13 +113,18 @@ export default async function HomePage() {
 
       {/* โครงการพูลวิลล่าหรู / โครงการใหม่ */}
       <section className="mt-6 sm:mt-8 md:mt-10">
-        <div className="mb-3 sm:mb-4">
-          <h2 className="font-bold text-lg sm:text-xl md:text-2xl text-navy">
-            โครงการพูลวิลล่าหรู และโครงการใหม่
-          </h2>
-          <p className="text-gray-600 text-sm sm:text-base mt-1">
-            โครงการที่เราคัดสรรสำหรับนักลงทุน เข้าถึงได้ผ่านเราเท่านั้น
-          </p>
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <div>
+            <h2 className="font-bold text-lg sm:text-xl md:text-2xl text-navy">
+              โครงการพูลวิลล่าหรู และโครงการใหม่
+            </h2>
+            <p className="text-gray-600 text-sm sm:text-base mt-1">
+              โครงการที่เราคัดสรรสำหรับนักลงทุน เข้าถึงได้ผ่านเราเท่านั้น
+            </p>
+          </div>
+          <Link href="/projects" className="text-blue text-sm font-medium hover:underline min-h-[44px] flex items-center shrink-0 ml-4">
+            ดูทั้งหมด
+          </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
           {featuredProjects.map((project) => (

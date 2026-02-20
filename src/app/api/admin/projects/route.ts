@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   if (!auth.ok) return NextResponse.json({ error: "Unauthorized" }, { status: auth.status });
   try {
     const body = await request.json();
-    const { name, tagline, location, badge, targetUrl, imageUrl, sortOrder, isActive } = body;
+    const { name, tagline, location, badge, targetUrl, imageUrl, description, videoId, gallery, highlights, sortOrder, isActive } = body;
     const project = await prisma.projectPromo.create({
       data: {
         name: String(name ?? ""),
@@ -23,6 +23,10 @@ export async function POST(request: Request) {
         badge: badge != null ? String(badge) : null,
         targetUrl: targetUrl != null ? String(targetUrl) : null,
         imageUrl: imageUrl != null ? String(imageUrl) : null,
+        description: description != null ? String(description) : null,
+        videoId: videoId != null ? String(videoId) : null,
+        gallery: gallery ?? null,
+        highlights: highlights ?? null,
         sortOrder: Number(sortOrder) || 0,
         isActive: isActive !== false,
       },

@@ -161,8 +161,42 @@ export async function getProjectPromos(): Promise<ProjectPromoItem[]> {
     badge: p.badge,
     targetUrl: p.targetUrl,
     imageUrl: p.imageUrl ?? null,
-    href: p.targetUrl ?? "/villas",
+    href: `/projects/${p.id}`,
   }));
+}
+
+export type ProjectDetail = {
+  id: string;
+  name: string;
+  tagline: string | null;
+  location: string | null;
+  badge: string | null;
+  imageUrl: string | null;
+  description: string | null;
+  videoId: string | null;
+  gallery: { label: string; imageUrl: string }[];
+  highlights: { label: string; value: string }[];
+};
+
+export async function getProjectDetail(id: string): Promise<ProjectDetail | null> {
+  const p = await prisma.projectPromo.findFirst({
+    where: { id, isActive: true },
+  });
+  if (!p) return null;
+  const galleryRaw = p.gallery as { label: string; imageUrl: string }[] | null | undefined;
+  const highlightsRaw = p.highlights as { label: string; value: string }[] | null | undefined;
+  return {
+    id: p.id,
+    name: p.name,
+    tagline: p.tagline,
+    location: p.location,
+    badge: p.badge,
+    imageUrl: p.imageUrl,
+    description: p.description,
+    videoId: p.videoId,
+    gallery: Array.isArray(galleryRaw) ? galleryRaw : [],
+    highlights: Array.isArray(highlightsRaw) ? highlightsRaw : [],
+  };
 }
 
 export async function getContactSettings(): Promise<ContactSettingsItem | null> {

@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 function LoginForm() {
   const router = useRouter();
@@ -12,6 +12,15 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
+  const [testLoginLoading, setTestLoginLoading] = useState(false);
+  const [showTestLogin, setShowTestLogin] = useState(false);
+
+  useEffect(() => {
+    setShowTestLogin(process.env.NODE_ENV === "development");
+  }, []);
+
+  const testEmail = process.env.NEXT_PUBLIC_TEST_ADMIN_EMAIL ?? "admin@poolvilla.local";
+  const testPassword = process.env.NEXT_PUBLIC_TEST_ADMIN_PASSWORD ?? "PoolVilla@Admin2026";
 
   const urlError = searchParams.get("error");
   const displayError =
@@ -47,6 +56,47 @@ function LoginForm() {
       }
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleTestLogin() {
+    setError(null);
+    setTestLoginLoading(true);
+    try {
+      const ensureRes = await fetch("/api/admin/ensure-test-user", {
+        method: "POST",
+      });
+      const data = await ensureRes.json().catch(() => ({}));
+
+      if (data.bypass) {
+        window.location.href = "/admin";
+        return;
+      }
+      if (ensureRes.status === 503) {
+        setError(data.error ?? "กรุณาตั้งค่า Supabase ใน .env.local");
+        return;
+      }
+
+      const supabase = createClient();
+      const { error: signError } = await supabase.auth.signInWithPassword({
+        email: testEmail,
+        password: testPassword,
+      });
+      if (signError) {
+        setError(signError.message === "Invalid login credentials" ? "อีเมลหรือรหัสผ่านไม่ถูกต้อง" : signError.message);
+        return;
+      }
+      window.location.href = "/admin";
+      return;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาด";
+      if (msg.includes("Missing") || msg.includes("NEXT_PUBLIC_SUPABASE")) {
+        setError("กรุณาตั้งค่า NEXT_PUBLIC_SUPABASE_URL และคีย์ใน .env.local");
+      } else {
+        setError("ล็อกอินอัตโนมัติไม่สำเร็จ");
+      }
+    } finally {
+      setTestLoginLoading(false);
     }
   }
 
@@ -126,6 +176,24 @@ function LoginForm() {
         >
           {githubLoading ? "กำลังส่ง..." : "เข้าสู่ระบบด้วย GitHub"}
         </button>
+        {showTestLogin && (
+          <>
+            <div className="relative my-4">
+              <span className="block text-center text-xs text-gray-500">หรือ (เทส)</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleTestLogin}
+              disabled={testLoginLoading}
+              className="w-full py-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 font-medium hover:bg-amber-100 disabled:opacity-70 text-sm"
+            >
+              {testLoginLoading ? "กำลังล็อกอิน..." : "ล็อกอินอัตโนมัติ (เทส)"}
+            </button>
+            <p className="text-xs text-gray-500 mt-1">
+              ตั้ง ADMIN_EMAIL=admin@poolvilla.local ใน .env.local ด้วย
+            </p>
+          </>
+        )}
       </form>
     </div>
   );

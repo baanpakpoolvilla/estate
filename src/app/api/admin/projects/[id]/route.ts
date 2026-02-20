@@ -23,7 +23,7 @@ export async function PUT(
   const { id } = await params;
   try {
     const body = await request.json();
-    const { name, tagline, location, badge, targetUrl, imageUrl, sortOrder, isActive } = body;
+    const { name, tagline, location, badge, targetUrl, imageUrl, description, videoId, gallery, highlights, sortOrder, isActive } = body;
     const project = await prisma.projectPromo.update({
       where: { id },
       data: {
@@ -33,6 +33,10 @@ export async function PUT(
         ...(badge !== undefined && { badge: badge == null ? null : String(badge) }),
         ...(targetUrl !== undefined && { targetUrl: targetUrl == null ? null : String(targetUrl) }),
         ...(imageUrl !== undefined && { imageUrl: imageUrl == null ? null : String(imageUrl) }),
+        ...(description !== undefined && { description: description == null ? null : String(description) }),
+        ...(videoId !== undefined && { videoId: videoId == null ? null : String(videoId) }),
+        ...(gallery !== undefined && { gallery: gallery ?? null }),
+        ...(highlights !== undefined && { highlights: highlights ?? null }),
         ...(sortOrder !== undefined && { sortOrder: Number(sortOrder) || 0 }),
         ...(isActive !== undefined && { isActive: isActive !== false }),
       },

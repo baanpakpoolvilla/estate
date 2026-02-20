@@ -10,6 +10,7 @@ const navItems = [
   { href: "/admin/projects", label: "จัดการโฆษณา/โครงการ" },
   { href: "/admin/articles", label: "จัดการบทความ" },
   { href: "/admin/settings", label: "ตั้งค่าเว็บไซต์" },
+  { href: "/admin/test", label: "ทดสอบระบบ" },
 ];
 
 export default function AdminSidebar() {

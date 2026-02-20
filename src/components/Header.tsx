@@ -8,6 +8,7 @@ import type { ContactSettingsItem } from "@/lib/data";
 const navItems = [
   { href: "/", label: "หน้าแรก" },
   { href: "/villas", label: "รายการบ้าน" },
+  { href: "/projects", label: "โครงการ" },
   { href: "/articles", label: "บทความ" },
   { href: "/investment", label: "ลงทุน" },
   { href: "/contact", label: "ติดต่อ" },

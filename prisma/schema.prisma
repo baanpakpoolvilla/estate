@@ -36,17 +36,21 @@ model Villa {
 }
 
 model ProjectPromo {
-  id        String   @id @default(cuid())
-  name      String
-  tagline   String?
-  location  String?
-  badge     String?
-  targetUrl String?
-  imageUrl  String?
-  sortOrder Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  name        String
+  tagline     String?
+  location    String?
+  badge       String?
+  targetUrl   String?
+  imageUrl    String?
+  description String?  @db.Text
+  videoId     String?
+  gallery     Json?    // [{ label, imageUrl }]
+  highlights  Json?    // [{ label, value }] เช่น จำนวนหลัง, ขนาดที่ดิน, ราคาเริ่มต้น
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model ContactSettings {
