@@ -149,6 +149,7 @@ async function main() {
         badge: "โครงการใหม่",
         targetUrl: "/villas",
         sortOrder: 1,
+        isActive: true,
       },
       {
         name: "Hill Estate Pool Villas",
@@ -157,19 +158,31 @@ async function main() {
         badge: "เปิดขายแล้ว",
         targetUrl: "/villas",
         sortOrder: 2,
+        isActive: true,
+      },
+      {
+        name: "Ocean View Pool Villas",
+        tagline: "วิลล่าหน้าทะเล พัทยา–ศรีราชา",
+        location: "พัทยา / ศรีราชา",
+        badge: "Pre-sale",
+        targetUrl: "/villas",
+        sortOrder: 3,
+        isActive: true,
       },
     ],
   });
 
   await prisma.contactSettings.create({
     data: {
+      logoUrl: null,
+      faviconUrl: null,
       companyName: "บริษัท ท๊อปฟอร์ม อสังหาริมทรัพย์ จำกัด",
       companyNameEn: "TOPFORM REAL ESTATE CO., LTD.",
       registrationNumber: "0205567002163",
       address: "84/22 หมู่ที่ 7 ตำบลสุรศักดิ์ อำเภอศรีราชา จ.ชลบุรี 20110",
       facebookUrl: "https://www.facebook.com/topformrealestateforinvesment/",
-      phone: null,
-      email: null,
+      phone: "081-234-5678",
+      email: "info@topform-realestate.com",
       lineUrl: null,
       mapUrl: null,
     },
@@ -182,7 +195,14 @@ async function main() {
         title: "ลงทุนพูลวิลล่า เริ่มต้นอย่างไรให้ได้ผลตอบแทนดี",
         slug: "invest-pool-villa-guide",
         excerpt: "แนวทางเลือกพูลวิลล่าลงทุน ตรวจสอบทำเล สัญญาบริหาร และการประมาณการรายได้",
-        body: "การลงทุนพูลวิลล่าเป็นทางเลือกที่น่าสนใจสำหรับผู้ที่ต้องการรายได้ passive จากอสังหาริมทรัพย์\n\n**จุดที่ควรพิจารณา:**\n- ทำเลและความต้องการของตลาด\n- สัญญาบริหารปล่อยเช่าและอัตราค่าบริหาร\n- ประวัติการเข้าพักและรายได้จริง\n\nติดต่อทีมงาน Pool Villa Estate เพื่อขอข้อมูลโครงการและคำปรึกษา",
+        body: `<p>การลงทุนพูลวิลล่าเป็นทางเลือกที่น่าสนใจสำหรับผู้ที่ต้องการรายได้ passive จากอสังหาริมทรัพย์</p>
+<p><strong>จุดที่ควรพิจารณา:</strong></p>
+<ul>
+<li>ทำเลและความต้องการของตลาด</li>
+<li>สัญญาบริหารปล่อยเช่าและอัตราค่าบริหาร</li>
+<li>ประวัติการเข้าพักและรายได้จริง</li>
+</ul>
+<p>ติดต่อทีมงาน ท๊อปฟอร์ม อสังหาริมทรัพย์ เพื่อขอข้อมูลโครงการและคำปรึกษา</p>`,
         isPublished: true,
         publishedAt: now,
         sortOrder: 1,
@@ -191,15 +211,35 @@ async function main() {
         title: "พูลวิลล่าหัวหิน vs พัทยา เปรียบเทียบจุดเด่นสำหรับนักลงทุน",
         slug: "huahin-vs-pattaya-pool-villa",
         excerpt: "เปรียบเทียบตลาดพูลวิลล่าหัวหินและพัทยา ทั้งกลุ่มลูกค้า รายได้และความเสี่ยง",
-        body: "ทั้งหัวหินและพัทยาเป็นตลาดพูลวิลล่าที่ได้รับความนิยม\n\n**หัวหิน:** เน้นกลุ่มครอบครัวและงานอีเวนต์ รายได้ต่อคืนสูง ฤดูกาลชัดเจน\n\n**พัทยา:** มีความต้องการกระจายทั้งปี ใกล้สนามบินและสิ่งอำนวยความสะดวก\n\nเลือกตามเป้าหมายการลงทุนและความชอบด้านความเสี่ยง",
+        body: `<p>ทั้งหัวหินและพัทยาเป็นตลาดพูลวิลล่าที่ได้รับความนิยม</p>
+<p><strong>หัวหิน:</strong> เน้นกลุ่มครอบครัวและงานอีเวนต์ รายได้ต่อคืนสูง ฤดูกาลชัดเจน</p>
+<p><strong>พัทยา:</strong> มีความต้องการกระจายทั้งปี ใกล้สนามบินและสิ่งอำนวยความสะดวก</p>
+<p>เลือกตามเป้าหมายการลงทุนและความชอบด้านความเสี่ยง</p>`,
         isPublished: true,
         publishedAt: now,
         sortOrder: 2,
       },
+      {
+        title: "สัญญาบริหารปล่อยเช่า พูลวิลล่า ต้องดูจุดไหน",
+        slug: "pool-villa-management-contract",
+        excerpt: "สรุปข้อควรตรวจในสัญญาบริหาร อัตราค่าบริหาร การรายงาน และระยะสัญญา",
+        body: `<p>ก่อนลงทุนพูลวิลล่า ควรทำความเข้าใจสัญญาบริหารปล่อยเช่าให้ชัดเจน</p>
+<h2>จุดที่ควรตรวจ</h2>
+<ul>
+<li>อัตราค่าบริหารและค่าธรรมเนียมอื่นๆ</li>
+<li>ความถี่การรายงานรายได้และ occupancy</li>
+<li>ระยะเวลาสัญญาและเงื่อนไขต่ออายุ</li>
+<li>การดูแลรักษาทรัพย์สินและความรับผิดชอบ</li>
+</ul>
+<p>ทีมงานเราพร้อมช่วยวิเคราะห์สัญญาและให้คำแนะนำเบื้องต้น</p>`,
+        isPublished: true,
+        publishedAt: now,
+        sortOrder: 3,
+      },
     ],
   });
 
-  console.log("Seed completed: villas, project promos, contact settings, articles.");
+  console.log("Seed completed: 4 villas, 3 project promos, contact settings, 3 articles.");
 }
 
 main()
