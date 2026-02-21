@@ -14,9 +14,10 @@ export const viewport: Viewport = {
 
 const sarabun = Sarabun({
   subsets: ["latin", "thai"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-sarabun",
   display: "swap",
+  preload: true,
 });
 
 const siteUrl =
@@ -86,6 +87,11 @@ export default async function RootLayout({
 
   return (
     <html lang="th" className={sarabun.variable}>
+      <head>
+        <link rel="dns-prefetch" href="https://dvwskeqmxwysebrusfdt.supabase.co" />
+        <link rel="preconnect" href="https://dvwskeqmxwysebrusfdt.supabase.co" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://img.youtube.com" />
+      </head>
       <body
         className="min-h-screen flex flex-col bg-offwhite text-navy"
         style={{
@@ -97,9 +103,11 @@ export default async function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
-        {contact?.faviconUrl && <Favicon href={contact.faviconUrl} />}
+        {(contact?.faviconUrl || contact?.logoUrl) && (
+          <Favicon href={contact.faviconUrl || contact.logoUrl} />
+        )}
         <Header contact={contact} />
-        <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-5 md:px-6 lg:px-8 py-6 sm:py-8 md:py-10">
+        <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-5 md:px-6 lg:px-8 pt-3 sm:pt-4 md:pt-5 pb-6 sm:pb-8 md:pb-10">
           {children}
         </main>
         <Footer contact={contact} />

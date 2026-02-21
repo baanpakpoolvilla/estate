@@ -26,6 +26,9 @@ export async function PUT(
     const {
       name,
       location,
+      address,
+      latitude,
+      longitude,
       price,
       roi,
       beds,
@@ -45,12 +48,16 @@ export async function PUT(
       salePlan,
       investmentMonthly,
       accountingSummary,
+      amenities,
     } = body;
     const villa = await prisma.villa.update({
       where: { id },
       data: {
         ...(name !== undefined && { name: String(name) }),
         ...(location !== undefined && { location: String(location) }),
+        ...(address !== undefined && { address: address == null ? null : String(address) }),
+        ...(latitude !== undefined && { latitude: latitude == null ? null : Number(latitude) }),
+        ...(longitude !== undefined && { longitude: longitude == null ? null : Number(longitude) }),
         ...(price !== undefined && { price: String(price) }),
         ...(roi !== undefined && { roi: String(roi) }),
         ...(beds !== undefined && { beds: Number(beds) || 0 }),
@@ -70,6 +77,7 @@ export async function PUT(
         ...(salePlan !== undefined && { salePlan: salePlan == null ? null : String(salePlan) }),
         ...(investmentMonthly !== undefined && { investmentMonthly }),
         ...(accountingSummary !== undefined && { accountingSummary }),
+        ...(amenities !== undefined && { amenities }),
       },
     });
     return NextResponse.json(villa);

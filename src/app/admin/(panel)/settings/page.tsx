@@ -120,6 +120,7 @@ export default function AdminSettingsPage() {
               placeholder="https://..."
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-navy"
             />
+            <p className="text-xs text-gray-500 mt-1">ถ้าเว้นว่าง จะใช้โลโก้เว็บไซต์ด้านบนเป็น Favicon อัตโนมัติ</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อบริษัท (ไทย)</label>

@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect } from "react";
+import { formatPrice } from "@/lib/format";
 
 export type HeroVilla = {
   id: string;
@@ -35,7 +37,7 @@ export default function HeroSlider({ villas }: { villas: HeroVilla[] }) {
   };
 
   return (
-    <section className="relative rounded-xl sm:rounded-2xl overflow-hidden bg-navy aspect-[3/4] sm:aspect-[16/10] md:aspect-[16/9] lg:aspect-[21/9]">
+    <section className="relative rounded-xl sm:rounded-2xl overflow-hidden bg-navy aspect-[9/10] sm:aspect-[16/10] md:aspect-[16/9] lg:aspect-[21/9]">
       {villas.map((villa, i) => (
         <div
           key={villa.id}
@@ -44,10 +46,13 @@ export default function HeroSlider({ villas }: { villas: HeroVilla[] }) {
           }`}
         >
           {(villa.imageUrl || villa.mainVideoId) && (
-            <img
+            <Image
               src={villa.imageUrl || `https://img.youtube.com/vi/${villa.mainVideoId}/maxresdefault.jpg`}
               alt={villa.name}
-              className="absolute inset-0 w-full h-full object-cover"
+              fill
+              sizes="100vw"
+              priority={i === 0}
+              className="object-cover"
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/40 to-transparent" />
@@ -66,7 +71,7 @@ export default function HeroSlider({ villas }: { villas: HeroVilla[] }) {
             </p>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 mb-3">
               <span className="font-semibold text-blue-light text-sm sm:text-base whitespace-nowrap">
-                ฿{villa.price} ลบ.
+                ฿{formatPrice(villa.price)}
               </span>
               <span className="text-white/90 text-xs sm:text-sm whitespace-nowrap">
                 ROI ~{villa.roi}%

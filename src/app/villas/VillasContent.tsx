@@ -1,0 +1,257 @@
+"use client";
+
+import Link from "next/link";
+import Image from "next/image";
+import { useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
+import { formatPrice } from "@/lib/format";
+import type { VillaListItem } from "@/lib/data";
+
+type Filters = {
+  search: string;
+  location: string;
+  priceMin: string;
+  priceMax: string;
+  bedsMin: string;
+  bathsMin: string;
+  sort: string;
+};
+
+const defaultFilters: Filters = {
+  search: "", location: "", priceMin: "", priceMax: "",
+  bedsMin: "", bathsMin: "", sort: "default",
+};
+
+export default function VillasContent({ villas }: { villas: VillaListItem[] }) {
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search") ?? "";
+  const [filters, setFilters] = useState<Filters>({ ...defaultFilters, search: initialSearch });
+  const [showMobileFilter, setShowMobileFilter] = useState(false);
+
+  function set<K extends keyof Filters>(key: K, value: Filters[K]) {
+    setFilters((p) => ({ ...p, [key]: value }));
+  }
+
+  const locations = useMemo(() => {
+    const locs = new Set(villas.map((v) => v.location));
+    return Array.from(locs).sort();
+  }, [villas]);
+
+  const filtered = useMemo(() => {
+    let list = [...villas];
+    const q = filters.search.toLowerCase().trim();
+    if (q) list = list.filter((v) => v.name.toLowerCase().includes(q) || v.location.toLowerCase().includes(q));
+    if (filters.location) list = list.filter((v) => v.location === filters.location);
+    const pMin = parseFloat(filters.priceMin);
+    if (!isNaN(pMin)) list = list.filter((v) => parseFloat(v.price) >= pMin);
+    const pMax = parseFloat(filters.priceMax);
+    if (!isNaN(pMax)) list = list.filter((v) => parseFloat(v.price) <= pMax);
+    const bMin = parseInt(filters.bedsMin);
+    if (!isNaN(bMin)) list = list.filter((v) => v.beds >= bMin);
+    const btMin = parseInt(filters.bathsMin);
+    if (!isNaN(btMin)) list = list.filter((v) => v.baths >= btMin);
+    if (filters.sort === "price-asc") list.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+    else if (filters.sort === "price-desc") list.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+    else if (filters.sort === "roi-desc") list.sort((a, b) => parseFloat(b.roi) - parseFloat(a.roi));
+    return list;
+  }, [villas, filters]);
+
+  const hasActiveFilter = filters.search || filters.location || filters.priceMin || filters.priceMax || filters.bedsMin || filters.bathsMin;
+
+  const selectCls = "w-full px-3 py-2 rounded-lg border border-gray-200 text-navy text-sm bg-white";
+  const inputCls = "w-full px-3 py-2 rounded-lg border border-gray-200 text-navy text-sm";
+
+  const filterContent = (
+    <div className="space-y-5">
+      {/* ค้นหา */}
+      <div>
+        <label className="block text-xs font-semibold text-navy mb-1.5">ค้นหา</label>
+        <input
+          type="text"
+          value={filters.search}
+          onChange={(e) => set("search", e.target.value)}
+          placeholder="ชื่อวิลล่า, ทำเล..."
+          className={inputCls}
+        />
+      </div>
+
+      {/* ทำเล */}
+      <div>
+        <label className="block text-xs font-semibold text-navy mb-1.5">ทำเล</label>
+        <select value={filters.location} onChange={(e) => set("location", e.target.value)} className={selectCls}>
+          <option value="">ทั้งหมด</option>
+          {locations.map((loc) => (
+            <option key={loc} value={loc}>{loc}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* ราคา */}
+      <div>
+        <label className="block text-xs font-semibold text-navy mb-1.5">ราคา (ล้านบาท)</label>
+        <div className="flex gap-2 items-center">
+          <input type="number" value={filters.priceMin} onChange={(e) => set("priceMin", e.target.value)} placeholder="ต่ำสุด" className={inputCls} min={0} step={0.5} />
+          <span className="text-gray-400 text-xs shrink-0">—</span>
+          <input type="number" value={filters.priceMax} onChange={(e) => set("priceMax", e.target.value)} placeholder="สูงสุด" className={inputCls} min={0} step={0.5} />
+        </div>
+      </div>
+
+      {/* ห้องนอน & ห้องน้ำ */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold text-navy mb-1.5">ห้องนอน (ขั้นต่ำ)</label>
+          <select value={filters.bedsMin} onChange={(e) => set("bedsMin", e.target.value)} className={selectCls}>
+            <option value="">ไม่จำกัด</option>
+            {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}+</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-navy mb-1.5">ห้องน้ำ (ขั้นต่ำ)</label>
+          <select value={filters.bathsMin} onChange={(e) => set("bathsMin", e.target.value)} className={selectCls}>
+            <option value="">ไม่จำกัด</option>
+            {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}+</option>)}
+          </select>
+        </div>
+      </div>
+
+      {/* เรียงลำดับ */}
+      <div>
+        <label className="block text-xs font-semibold text-navy mb-1.5">เรียงตาม</label>
+        <select value={filters.sort} onChange={(e) => set("sort", e.target.value)} className={selectCls}>
+          <option value="default">ค่าเริ่มต้น</option>
+          <option value="price-asc">ราคาต่ำ → สูง</option>
+          <option value="price-desc">ราคาสูง → ต่ำ</option>
+          <option value="roi-desc">ROI สูงสุด</option>
+        </select>
+      </div>
+
+      {/* ล้างตัวกรอง */}
+      {hasActiveFilter && (
+        <button
+          type="button"
+          onClick={() => setFilters(defaultFilters)}
+          className="w-full py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition"
+        >
+          ล้างตัวกรองทั้งหมด
+        </button>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="flex gap-6">
+      {/* Sidebar Desktop */}
+      <aside className="hidden lg:block w-64 shrink-0">
+        <div className="sticky top-20 bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+          <h2 className="font-semibold text-navy text-sm mb-4">ค้นหาและกรอง</h2>
+          {filterContent}
+        </div>
+      </aside>
+
+      {/* Mobile filter overlay */}
+      {showMobileFilter && (
+        <div className="lg:hidden fixed inset-0 z-50 flex">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowMobileFilter(false)} />
+          <div className="relative ml-auto w-[min(320px,85vw)] bg-white h-full overflow-y-auto shadow-xl">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+              <h2 className="font-semibold text-navy">ค้นหาและกรอง</h2>
+              <button type="button" onClick={() => setShowMobileFilter(false)} className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500">✕</button>
+            </div>
+            <div className="p-4">
+              {filterContent}
+              <button
+                type="button"
+                onClick={() => setShowMobileFilter(false)}
+                className="w-full mt-5 py-2.5 rounded-xl bg-blue text-white text-sm font-semibold"
+              >
+                ดูผลลัพธ์ ({filtered.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main content */}
+      <div className="flex-1 min-w-0">
+        {/* Mobile filter button */}
+        <div className="lg:hidden flex items-center justify-between mb-4">
+          <span className="text-sm text-gray-500">{filtered.length} รายการ</span>
+          <button
+            type="button"
+            onClick={() => setShowMobileFilter(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-sm text-navy bg-white hover:bg-gray-50"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+            ค้นหา / กรอง
+            {hasActiveFilter && <span className="w-2 h-2 rounded-full bg-blue" />}
+          </button>
+        </div>
+
+        {/* Desktop result count */}
+        <div className="hidden lg:block mb-4">
+          <span className="text-sm text-gray-500">พบ {filtered.length} รายการ{hasActiveFilter ? " (กรองแล้ว)" : ""}</span>
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="text-center py-16 text-gray-400">
+            <p className="text-lg mb-2">ไม่พบรายการที่ตรงกับเงื่อนไข</p>
+            <button type="button" onClick={() => setFilters(defaultFilters)} className="text-sm text-blue hover:underline">ล้างตัวกรอง</button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+            {filtered.map((villa) => (
+              <Link
+                key={villa.id}
+                href={`/villas/${villa.id}`}
+                className="group block bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 transition-all hover:shadow-lg hover:border-blue/20"
+              >
+                <div className="relative aspect-[16/10] bg-navy overflow-hidden">
+                  {villa.imageUrl ? (
+                    <Image src={villa.imageUrl} alt={villa.name} fill sizes="(max-width:640px) 100vw, (max-width:1280px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                  ) : villa.mainVideoId ? (
+                    <Image src={`https://img.youtube.com/vi/${villa.mainVideoId}/mqdefault.jpg`} alt={villa.name} fill sizes="(max-width:640px) 100vw, (max-width:1280px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-navy via-blue/30 to-navy flex items-center justify-center">
+                      <span className="text-white/40 text-lg">Pool Villa</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-navy/80 via-transparent to-transparent" />
+                  {villa.tag && (
+                    <span className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-white/95 text-navy text-xs font-medium">{villa.tag}</span>
+                  )}
+                  <span className="absolute bottom-2 left-2 text-white/90 text-xs font-medium">
+                    {villa.mainVideoId ? "ดูวิดีโอ + รายละเอียดการลงทุน" : "ดูรูปภาพ + รายละเอียดการลงทุน"}
+                  </span>
+                </div>
+                <div className="p-4 sm:p-5">
+                  <h2 className="font-semibold text-navy text-base sm:text-lg group-hover:text-blue">{villa.name}</h2>
+                  <p className="text-gray-500 text-sm mt-0.5">{villa.location}</p>
+                  <div className="grid grid-cols-3 gap-2 mt-3 text-center">
+                    <div className="bg-offwhite rounded-lg py-2 px-1">
+                      <p className="text-gray-500 text-[10px] md:text-xs truncate">ราคา</p>
+                      <p className="text-blue font-semibold text-xs md:text-sm truncate">฿{formatPrice(villa.price)}</p>
+                    </div>
+                    <div className="bg-offwhite rounded-lg py-2 px-1">
+                      <p className="text-gray-500 text-[10px] md:text-xs truncate">ROI</p>
+                      <p className="text-navy font-semibold text-xs md:text-sm">~{villa.roi}%</p>
+                    </div>
+                    <div className="bg-offwhite rounded-lg py-2 px-1">
+                      <p className="text-gray-500 text-[10px] md:text-xs truncate">กำไร/เดือน</p>
+                      <p className="text-green-700 font-semibold text-xs md:text-sm truncate">{villa.profitMonthly}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-sm text-gray-600">
+                    <span>{villa.beds} ห้องนอน</span>
+                    <span>{villa.baths} ห้องน้ำ</span>
+                    <span>{villa.sqm} ตร.ม.</span>
+                  </div>
+                  <p className="mt-3 pt-3 border-t border-gray-100 text-blue text-sm font-medium">ดูรายละเอียดการลงทุน</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

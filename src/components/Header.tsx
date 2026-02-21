@@ -51,9 +51,13 @@ export default function Header({ contact }: { contact?: ContactSettingsItem | nu
           href="/"
           className="flex items-center gap-2 font-semibold text-base sm:text-lg md:text-xl text-white hover:text-white/90 shrink-0 min-h-[44px]"
         >
-          {/* ตอนยังไม่ mount แสดงเฉพาะข้อความ เพื่อให้ server กับ client ตรงกัน (แก้ hydration) */}
           {mounted && contact?.logoUrl ? (
-            <img src={contact.logoUrl} alt="" className="h-7 sm:h-8 md:h-9 w-auto max-w-[120px] xs:max-w-[140px] sm:max-w-[160px] md:max-w-[180px] object-contain" />
+            <>
+              <img src={contact.logoUrl} alt={contact?.companyName ?? ""} className="h-7 sm:h-8 md:h-9 w-auto max-w-[100px] sm:max-w-[140px] md:max-w-[180px] object-contain" />
+              <span className="truncate text-xs sm:text-sm lg:text-base">
+                {contact?.companyNameEn ?? contact?.companyName ?? ""}
+              </span>
+            </>
           ) : (
             <span className="truncate max-w-[140px] xs:max-w-[180px] sm:max-w-none">
               {contact?.companyNameEn ?? contact?.companyName ?? "ท๊อปฟอร์ม อสังหาริมทรัพย์"}

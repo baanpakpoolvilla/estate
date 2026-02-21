@@ -10,6 +10,8 @@ type ArticleFormData = {
   excerpt: string;
   body: string;
   coverImageUrl: string;
+  seoKeywords: string;
+  metaDescription: string;
   isPublished: boolean;
   publishedAt: string;
   sortOrder: number;
@@ -29,6 +31,8 @@ const defaultValues: ArticleFormData = {
   excerpt: "",
   body: "",
   coverImageUrl: "",
+  seoKeywords: "",
+  metaDescription: "",
   isPublished: false,
   publishedAt: "",
   sortOrder: 0,
@@ -51,6 +55,8 @@ export default function ArticleForm({ initial, onSubmit }: ArticleFormProps) {
       excerpt: String(initial.excerpt ?? ""),
       body: String(initial.body ?? ""),
       coverImageUrl: String(initial.coverImageUrl ?? ""),
+      seoKeywords: String(initial.seoKeywords ?? ""),
+      metaDescription: String(initial.metaDescription ?? ""),
       isPublished: initial.isPublished === true,
       publishedAt:
         pubAt instanceof Date
@@ -82,6 +88,8 @@ export default function ArticleForm({ initial, onSubmit }: ArticleFormProps) {
         excerpt: form.excerpt.trim() || null,
         body: form.body,
         coverImageUrl: form.coverImageUrl.trim() || null,
+        seoKeywords: form.seoKeywords.trim() || null,
+        metaDescription: form.metaDescription.trim() || null,
         isPublished: form.isPublished,
         publishedAt: form.publishedAt ? new Date(form.publishedAt).toISOString() : null,
         sortOrder: form.sortOrder,
@@ -144,6 +152,36 @@ export default function ArticleForm({ initial, onSubmit }: ArticleFormProps) {
           onChange={(url) => update("coverImageUrl", url)}
         />
       </div>
+      {/* SEO Section */}
+      <fieldset className="space-y-4 bg-gradient-to-br from-blue/5 to-transparent rounded-xl p-4 border border-blue/10">
+        <legend className="text-sm font-semibold text-navy px-2">SEO (ปรับแต่งการค้นหา)</legend>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Focus Keywords</label>
+          <input
+            type="text"
+            value={form.seoKeywords}
+            onChange={(e) => update("seoKeywords", e.target.value)}
+            placeholder="เช่น ลงทุนพูลวิลล่า, วิลล่าพัทยา, ROI สูง"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-navy"
+          />
+          <p className="text-xs text-gray-500 mt-1">คั่นด้วยเครื่องหมายจุลภาค (,) — ใช้เป็น meta keywords, JSON-LD, และ Open Graph tags</p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
+          <textarea
+            value={form.metaDescription}
+            onChange={(e) => update("metaDescription", e.target.value)}
+            rows={2}
+            placeholder="คำอธิบายสำหรับ Google (ถ้าไม่ใส่จะใช้สรุปย่อแทน)"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-navy resize-none"
+            maxLength={300}
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            {form.metaDescription.length}/300 ตัวอักษร — แนะนำ 120-160 ตัวอักษร เพื่อแสดงผลดีใน Google
+          </p>
+        </div>
+      </fieldset>
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">ลำดับแสดง</label>
         <input

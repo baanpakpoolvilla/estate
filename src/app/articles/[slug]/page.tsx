@@ -34,10 +34,14 @@ export async function generateMetadata({
     const article = await getArticleBySlugOrId(slug);
     if (!article) return { title: "ไม่พบบทความ" };
     const title = article.title;
-    const description = article.excerpt || article.body.slice(0, 160);
+    const description = article.metaDescription || article.excerpt || article.body.replace(/<[^>]*>/g, "").slice(0, 160);
+    const keywords = article.seoKeywords
+      ? article.seoKeywords.split(",").map((k: string) => k.trim()).filter(Boolean)
+      : undefined;
     return {
       title,
       description,
+      ...(keywords && { keywords }),
       openGraph: {
         title: `${title} | ท๊อปฟอร์ม อสังหาริมทรัพย์`,
         description,
@@ -46,6 +50,7 @@ export async function generateMetadata({
         publishedTime: article.publishedAt
           ? new Date(article.publishedAt).toISOString()
           : undefined,
+        ...(keywords && { tags: keywords }),
       },
       alternates: { canonical: `/articles/${article.slug}` },
     };
@@ -68,11 +73,17 @@ export default async function ArticleDetailPage({
   }
   if (!article) notFound();
 
+  const seoDescription = article.metaDescription || article.excerpt || undefined;
+  const seoKeywordsList = article.seoKeywords
+    ? article.seoKeywords.split(",").map((k: string) => k.trim()).filter(Boolean)
+    : [];
+
   const articleJsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: article.title,
-    description: article.excerpt || undefined,
+    description: seoDescription,
+    ...(seoKeywordsList.length > 0 && { keywords: seoKeywordsList.join(", ") }),
     ...(article.coverImageUrl && { image: article.coverImageUrl }),
     ...(article.publishedAt && {
       datePublished: new Date(article.publishedAt).toISOString(),

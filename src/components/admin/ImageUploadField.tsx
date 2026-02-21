@@ -1,6 +1,23 @@
 "use client";
 
 import { useState, useRef } from "react";
+import imageCompression from "browser-image-compression";
+
+const SKIP_COMPRESSION_TYPES = ["image/svg+xml", "image/gif"];
+
+async function compressToWebp(file: File): Promise<File> {
+  if (SKIP_COMPRESSION_TYPES.includes(file.type)) return file;
+
+  const compressed = await imageCompression(file, {
+    maxSizeMB: 1,
+    maxWidthOrHeight: 1920,
+    fileType: "image/webp",
+    useWebWorker: true,
+  });
+
+  const name = file.name.replace(/\.[^.]+$/, "") + ".webp";
+  return new File([compressed], name, { type: "image/webp" });
+}
 
 type ImageUploadFieldProps = {
   value: string;
@@ -15,12 +32,13 @@ export default function ImageUploadField({ value, onChange, label = "รูป�
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+    const raw = e.target.files?.[0];
     e.target.value = "";
-    if (!file) return;
+    if (!raw) return;
     setError(null);
     setUploading(true);
     try {
+      const file = await compressToWebp(raw);
       const formData = new FormData();
       formData.set("file", file);
       const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
@@ -71,7 +89,7 @@ export default function ImageUploadField({ value, onChange, label = "รูป�
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif"
+        accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
         className="hidden"
         onChange={handleFile}
       />

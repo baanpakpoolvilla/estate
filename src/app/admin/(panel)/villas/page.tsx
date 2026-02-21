@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { formatPrice } from "@/lib/format";
 
 type Villa = {
   id: string;
@@ -78,7 +79,7 @@ export default function AdminVillasPage() {
                   <tr key={v.id} className="border-b border-gray-100 hover:bg-gray-50/50">
                     <td className="py-3 px-4 font-medium text-navy">{v.name}</td>
                     <td className="py-3 px-4 text-gray-600">{v.location}</td>
-                    <td className="py-3 px-4">฿{v.price} ลบ.</td>
+                    <td className="py-3 px-4">฿{formatPrice(v.price)}</td>
                     <td className="py-3 px-4">
                       <span
                         className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${

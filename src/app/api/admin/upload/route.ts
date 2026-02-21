@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { supabaseAdmin, UPLOAD_BUCKET } from "@/lib/supabase-server";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
 
 export async function POST(request: Request) {
   const auth = await requireAdmin();
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "ไฟล์ใหญ่เกิน 5MB" }, { status: 400 });
     }
     if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: "รองรับเฉพาะรูปภาพ (JPEG, PNG, WebP, GIF)" }, { status: 400 });
+      return NextResponse.json({ error: "รองรับเฉพาะรูปภาพ (JPEG, PNG, WebP, GIF, SVG)" }, { status: 400 });
     }
 
     const ext = file.name.split(".").pop() || "jpg";

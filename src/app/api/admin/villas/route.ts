@@ -17,6 +17,9 @@ export async function POST(request: Request) {
     const {
       name,
       location,
+      address,
+      latitude,
+      longitude,
       price,
       roi,
       beds,
@@ -36,11 +39,15 @@ export async function POST(request: Request) {
       salePlan,
       investmentMonthly,
       accountingSummary,
+      amenities,
     } = body;
     const villa = await prisma.villa.create({
       data: {
         name: String(name ?? ""),
         location: String(location ?? ""),
+        address: address != null ? String(address) : null,
+        latitude: latitude != null ? Number(latitude) : null,
+        longitude: longitude != null ? Number(longitude) : null,
         price: String(price ?? ""),
         roi: String(roi ?? ""),
         beds: Number(beds) || 0,
@@ -60,6 +67,7 @@ export async function POST(request: Request) {
         salePlan: salePlan != null ? String(salePlan) : null,
         investmentMonthly: investmentMonthly ?? null,
         accountingSummary: accountingSummary ?? null,
+        amenities: amenities ?? null,
       },
     });
     return NextResponse.json(villa);

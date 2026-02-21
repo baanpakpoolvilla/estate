@@ -18,6 +18,9 @@ export type VillaListItem = {
 export type VillaDetail = {
   name: string;
   location: string;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
   price: string;
   roi: string;
   beds: number;
@@ -25,6 +28,7 @@ export type VillaDetail = {
   sqm: number;
   land: number;
   desc: string;
+  imageUrl: string | null;
   mainVideoId: string;
   areaVideos: { label: string; youtubeId: string }[];
   gallery: { label: string; area: string; imageUrls: string[] }[];
@@ -33,6 +37,10 @@ export type VillaDetail = {
   salePlan: string;
   investmentMonthly: { revenue: string; expenses: string; profit: string };
   accountingSummary: { period: string; revenue: string; profit: string }[];
+  amenities: {
+    pool: boolean; kidsPool: boolean; karaoke: boolean; pingpong: boolean;
+    snooker: boolean; kitchen: boolean; wifi: boolean; parking: boolean; parkingSlots: number;
+  };
 };
 
 export type ProjectPromoItem = {
@@ -76,6 +84,8 @@ export type ArticleDetail = {
   excerpt: string | null;
   body: string;
   coverImageUrl: string | null;
+  seoKeywords: string | null;
+  metaDescription: string | null;
   publishedAt: Date | null;
   createdAt: Date;
 };
@@ -126,6 +136,9 @@ export async function getVillaForDetail(id: string): Promise<VillaDetail | null>
   return {
     name: v.name,
     location: v.location,
+    address: v.address ?? null,
+    latitude: v.latitude ?? null,
+    longitude: v.longitude ?? null,
     price: v.price,
     roi: v.roi,
     beds: v.beds,
@@ -133,6 +146,7 @@ export async function getVillaForDetail(id: string): Promise<VillaDetail | null>
     sqm: v.sqm,
     land: v.land ?? 0,
     desc: v.description ?? "",
+    imageUrl: v.imageUrl ?? null,
     mainVideoId: v.mainVideoId ?? "",
     areaVideos,
     gallery,
@@ -145,6 +159,11 @@ export async function getVillaForDetail(id: string): Promise<VillaDetail | null>
       profit: inv.profit ?? "",
     },
     accountingSummary,
+    amenities: {
+      pool: false, kidsPool: false, karaoke: false, pingpong: false,
+      snooker: false, kitchen: false, wifi: false, parking: false, parkingSlots: 0,
+      ...((v.amenities as Record<string, unknown>) ?? {}),
+    },
   };
 }
 
@@ -248,6 +267,8 @@ export async function getArticleBySlugOrId(slugOrId: string): Promise<ArticleDet
     excerpt: article.excerpt,
     body: article.body,
     coverImageUrl: article.coverImageUrl,
+    seoKeywords: article.seoKeywords,
+    metaDescription: article.metaDescription,
     publishedAt: article.publishedAt,
     createdAt: article.createdAt,
   };

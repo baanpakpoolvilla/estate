@@ -1,6 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import HeroSlider from "@/components/HeroSlider";
+import HomeSearch from "@/components/HomeSearch";
 import { getVillasForList, getProjectPromos, getArticlesForList } from "@/lib/data";
+import { formatPrice } from "@/lib/format";
 
 // ให้ render ฝั่ง server ทุกครั้ง เพื่อไม่ให้ build ล้มเหลวเมื่อไม่มี DB
 export const dynamic = "force-dynamic";
@@ -51,6 +54,11 @@ export default async function HomePage() {
       {/* Hero - สไลด์บ้านแนะนำ */}
       <HeroSlider villas={heroVillas} />
 
+      {/* Search */}
+      <section className="mt-6 sm:mt-8">
+        <HomeSearch />
+      </section>
+
       {/* Featured villas - การ์ดสไตล์เดียวกับหน้ารายการบ้าน */}
       <section className="mt-6 sm:mt-8 md:mt-10">
         <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -67,11 +75,13 @@ export default async function HomePage() {
               className="group block bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 transition-all hover:shadow-lg hover:border-blue/20"
             >
               <div className="relative aspect-[16/10] bg-navy overflow-hidden">
-                <img
-                  src={villa.imageUrl || `https://img.youtube.com/vi/${villa.mainVideoId}/mqdefault.jpg`}
-                  alt={villa.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+                {villa.imageUrl ? (
+                  <Image src={villa.imageUrl} alt={villa.name} fill sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                ) : villa.mainVideoId ? (
+                  <Image src={`https://img.youtube.com/vi/${villa.mainVideoId}/mqdefault.jpg`} alt={villa.name} fill sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-navy via-blue/30 to-navy" />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-navy/60 via-transparent to-transparent" />
                 {villa.tag && (
                   <span className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-white/95 text-navy text-xs font-medium">
@@ -88,7 +98,7 @@ export default async function HomePage() {
                   <div className="bg-offwhite rounded-lg py-2 px-1">
                     <p className="text-gray-500 text-[10px] md:text-xs truncate">ราคา</p>
                     <p className="text-blue font-semibold text-xs md:text-sm truncate">
-                      ฿{villa.price} ลบ.
+                      ฿{formatPrice(villa.price)}
                     </p>
                   </div>
                   <div className="bg-offwhite rounded-lg py-2 px-1">
@@ -103,7 +113,7 @@ export default async function HomePage() {
                   </div>
                 </div>
                 <p className="mt-3 text-blue text-sm font-medium">
-                  ดูวิดีโอ แกลลอรี่ และรายละเอียดการลงทุน
+                  {villa.mainVideoId ? "ดูวิดีโอ แกลลอรี่ และรายละเอียดการลงทุน" : "ดูรูปภาพ แกลลอรี่ และรายละเอียดการลงทุน"}
                 </p>
               </div>
             </Link>
@@ -135,11 +145,7 @@ export default async function HomePage() {
             >
               <div className="relative aspect-[21/10] bg-gradient-to-br from-navy via-blue/30 to-navy overflow-hidden">
                 {project.imageUrl ? (
-                  <img
-                    src={project.imageUrl}
-                    alt={project.name}
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
+                  <Image src={project.imageUrl} alt={project.name} fill sizes="(max-width:640px) 100vw, 50vw" className="object-cover" />
                 ) : null}
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue/40 via-transparent to-transparent" />
                 <div className="absolute inset-0 flex flex-col justify-end p-4 md:p-5 text-white">
@@ -183,14 +189,10 @@ export default async function HomePage() {
               >
                 <div className="relative aspect-[16/10] bg-gray-100 overflow-hidden">
                   {article.coverImageUrl ? (
-                    <img
-                      src={article.coverImageUrl}
-                      alt=""
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                    <Image src={article.coverImageUrl} alt="" fill sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-navy/10 to-blue/10">
-                      <span className="text-gray-400 text-2xl font-light">บทความ</span>
+                      <span className="text-gray-400 text-2xl">บทความ</span>
                     </div>
                   )}
                 </div>
