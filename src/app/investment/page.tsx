@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { getPortfolioStats } from "@/lib/data";
+import { formatNumber } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "ลงทุนกับเรา",
@@ -12,7 +14,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/investment" },
 };
 
-export default function InvestmentPage() {
+export default async function InvestmentPage() {
+  const stats = await getPortfolioStats();
   return (
     <div className="w-full min-w-0">
       <div className="mb-5 sm:mb-6 md:mb-8">
@@ -91,15 +94,15 @@ export default function InvestmentPage() {
           </ul>
         </section>
 
-        {/* ตัวเลขรวมโครงการ (คงไว้แบบย่อ) */}
+        {/* ตัวเลขรวมโครงการ (ข้อมูลจริง) */}
         <section className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-sm border border-gray-100">
           <h2 className="font-semibold text-navy mb-3 md:text-lg">ตัวเลขรวมโครงการ</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             {[
-              { label: "วิลล่าทั้งหมด", value: "24 หลัง" },
-              { label: "Occupancy เฉลี่ย", value: "65–75%" },
-              { label: "ADR เฉลี่ย", value: "฿8,000+/คืน" },
-              { label: "ROI เฉลี่ย", value: "8–10%" },
+              { label: "วิลล่าทั้งหมด", value: `${stats.totalVillas} หลัง` },
+              { label: "มูลค่ารวม", value: `฿${formatNumber(stats.totalValue)}` },
+              { label: "กำไรเฉลี่ย/เดือน", value: `฿${formatNumber(stats.avgProfitMonthly)}` },
+              { label: "ROI เฉลี่ย", value: `~${stats.avgRoi}%` },
             ].map((item) => (
               <div key={item.label} className="bg-offwhite rounded-xl p-3 md:p-4">
                 <p className="text-gray-500 text-xs md:text-sm">{item.label}</p>

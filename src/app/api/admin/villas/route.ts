@@ -40,6 +40,7 @@ export async function POST(request: Request) {
       investmentMonthly,
       accountingSummary,
       amenities,
+      ownerInfo,
     } = body;
     const villa = await prisma.villa.create({
       data: {
@@ -68,6 +69,7 @@ export async function POST(request: Request) {
         investmentMonthly: investmentMonthly ?? null,
         accountingSummary: accountingSummary ?? null,
         amenities: amenities ?? null,
+        ownerInfo: ownerInfo ?? null,
       },
     });
     return NextResponse.json(villa);

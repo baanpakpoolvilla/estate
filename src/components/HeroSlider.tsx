@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatNumber } from "@/lib/format";
 
 export type HeroVilla = {
   id: string;
@@ -78,7 +78,7 @@ export default function HeroSlider({ villas }: { villas: HeroVilla[] }) {
               </span>
               {villa.profitMonthly && (
                 <span className="text-white/90 text-xs sm:text-sm whitespace-nowrap">
-                  กำไร/เดือน {villa.profitMonthly}
+                  กำไร/เดือน ฿{formatNumber(villa.profitMonthly)}
                 </span>
               )}
             </div>

@@ -95,6 +95,47 @@ function profitFromVilla(v: { investmentMonthly?: unknown }): string {
   return (m?.profit as string) ?? "";
 }
 
+export type PortfolioStats = {
+  totalVillas: number;
+  avgRoi: string;
+  avgProfitMonthly: string;
+  totalValue: string;
+};
+
+export async function getPortfolioStats(): Promise<PortfolioStats> {
+  const villas = await prisma.villa.findMany({
+    where: { isPublished: true },
+    select: { roi: true, price: true, investmentMonthly: true },
+  });
+
+  const totalVillas = villas.length;
+
+  const rois = villas
+    .map((v) => parseFloat(v.roi))
+    .filter((n) => !isNaN(n) && n > 0);
+  const avgRoi = rois.length > 0
+    ? (rois.reduce((a, b) => a + b, 0) / rois.length).toFixed(1)
+    : "0";
+
+  const profits = villas
+    .map((v) => {
+      const m = v.investmentMonthly as { profit?: string } | null | undefined;
+      return parseFloat(String(m?.profit ?? "").replace(/,/g, ""));
+    })
+    .filter((n) => !isNaN(n) && n > 0);
+  const avgProfitMonthly = profits.length > 0
+    ? Math.round(profits.reduce((a, b) => a + b, 0) / profits.length).toString()
+    : "0";
+
+  const prices = villas
+    .map((v) => parseFloat(v.price))
+    .filter((n) => !isNaN(n) && n > 0);
+  const totalValueMillion = prices.reduce((a, b) => a + b, 0);
+  const totalValue = Math.round(totalValueMillion * 1_000_000).toString();
+
+  return { totalVillas, avgRoi, avgProfitMonthly, totalValue };
+}
+
 export async function getVillasForList(): Promise<VillaListItem[]> {
   const list = await prisma.villa.findMany({
     where: { isPublished: true },

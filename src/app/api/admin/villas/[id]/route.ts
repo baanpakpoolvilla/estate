@@ -49,6 +49,7 @@ export async function PUT(
       investmentMonthly,
       accountingSummary,
       amenities,
+      ownerInfo,
     } = body;
     const villa = await prisma.villa.update({
       where: { id },
@@ -78,6 +79,7 @@ export async function PUT(
         ...(investmentMonthly !== undefined && { investmentMonthly }),
         ...(accountingSummary !== undefined && { accountingSummary }),
         ...(amenities !== undefined && { amenities }),
+        ...(ownerInfo !== undefined && { ownerInfo }),
       },
     });
     return NextResponse.json(villa);

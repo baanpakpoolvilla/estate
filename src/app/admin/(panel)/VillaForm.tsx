@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
-import imageCompression from "browser-image-compression";
+import { useState } from "react";
 import ImageUploadField from "@/components/admin/ImageUploadField";
+import MultiImageUpload from "@/components/admin/MultiImageUpload";
 import QuillEditor from "@/components/admin/QuillEditor";
 import MapPicker from "@/components/admin/MapPicker";
 
@@ -24,6 +24,21 @@ type Amenities = {
 const defaultAmenities: Amenities = {
   pool: false, kidsPool: false, karaoke: false, pingpong: false,
   snooker: false, kitchen: false, wifi: false, parking: false, parkingSlots: 0,
+};
+type OwnerInfo = {
+  propertyCode: string;
+  ownerName: string;
+  ownerContact: string;
+  wholesalePrice: string;
+  commission: string;
+  titleDeedType: string;
+  transferFee: string;
+  viewingNotice: string;
+};
+const defaultOwnerInfo: OwnerInfo = {
+  propertyCode: "", ownerName: "", ownerContact: "",
+  wholesalePrice: "", commission: "", titleDeedType: "",
+  transferFee: "", viewingNotice: "",
 };
 
 export type VillaFormData = {
@@ -54,6 +69,7 @@ export type VillaFormData = {
   investmentProfit: string;
   accountingSummary: AccountingRow[];
   amenities: Amenities;
+  ownerInfo: OwnerInfo;
 };
 
 function parseArr<T>(raw: unknown): T[] {
@@ -83,6 +99,7 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
         investmentRevenue: "", investmentExpenses: "", investmentProfit: "",
         accountingSummary: [],
         amenities: { ...defaultAmenities },
+        ownerInfo: { ...defaultOwnerInfo },
       };
     }
     const inv = (initial.investmentMonthly as Record<string, string> | null) ?? {};
@@ -123,6 +140,7 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
         period: a.period ?? "", revenue: a.revenue ?? "", profit: a.profit ?? "",
       })),
       amenities: { ...defaultAmenities, ...((initial.amenities as Partial<Amenities>) ?? {}) },
+      ownerInfo: { ...defaultOwnerInfo, ...((initial.ownerInfo as Partial<OwnerInfo>) ?? {}) },
     };
   });
 
@@ -167,6 +185,7 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
         },
         accountingSummary: form.accountingSummary.filter((a) => a.period),
         amenities: form.amenities,
+        ownerInfo: form.ownerInfo,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
@@ -369,7 +388,12 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
       </fieldset>
 
       {/* แกลเลอรี่ */}
-      <GallerySection gallery={form.gallery} onChange={(g) => update("gallery", g)} smallInputCls={smallInputCls} />
+      <GallerySection
+        gallery={form.gallery}
+        onChange={(g) => update("gallery", g)}
+        onAdd={(url) => setForm((prev) => ({ ...prev, gallery: [...prev.gallery, { label: "", area: "", imageUrl: url }] }))}
+        smallInputCls={smallInputCls}
+      />
 
       {/* ตัวเลขการลงทุนรายเดือน */}
       <fieldset className="space-y-4 bg-white rounded-xl p-4 border border-gray-100">
@@ -456,6 +480,49 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
         </div>
       </fieldset>
 
+      {/* ข้อมูลเจ้าของบ้าน (admin only) */}
+      <fieldset className="space-y-4 bg-gradient-to-br from-amber-50 to-orange-50/30 rounded-xl p-4 border border-amber-200/60">
+        <legend className="text-sm font-semibold text-amber-800 px-2 flex items-center gap-1.5">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2Zm10-10V7a4 4 0 0 0-8 0v4h8Z" /></svg>
+          ข้อมูลเจ้าของบ้าน (เฉพาะแอดมิน)
+        </legend>
+        <p className="text-xs text-amber-700/70">ข้อมูลนี้จะไม่แสดงบนเว็บไซต์สาธารณะ</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className={labelCls}>รหัสทรัพย์</label>
+            <input type="text" value={form.ownerInfo.propertyCode} onChange={(e) => update("ownerInfo", { ...form.ownerInfo, propertyCode: e.target.value })} placeholder="เช่น PV-001" className={smallInputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>ชื่อเจ้าของ</label>
+            <input type="text" value={form.ownerInfo.ownerName} onChange={(e) => update("ownerInfo", { ...form.ownerInfo, ownerName: e.target.value })} placeholder="ชื่อ-นามสกุล" className={smallInputCls} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={labelCls}>เบอร์ / Line / Facebook</label>
+            <input type="text" value={form.ownerInfo.ownerContact} onChange={(e) => update("ownerInfo", { ...form.ownerInfo, ownerContact: e.target.value })} placeholder="เช่น 081-234-5678 / Line: @owner / FB: ชื่อ" className={smallInputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>ราคาส่ง</label>
+            <input type="text" value={form.ownerInfo.wholesalePrice} onChange={(e) => update("ownerInfo", { ...form.ownerInfo, wholesalePrice: e.target.value })} placeholder="เช่น 14,000,000" className={smallInputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>ค่าคอม</label>
+            <input type="text" value={form.ownerInfo.commission} onChange={(e) => update("ownerInfo", { ...form.ownerInfo, commission: e.target.value })} placeholder="เช่น 3% หรือ 500,000" className={smallInputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>โฉนด (บริษัท/บุคคล)</label>
+            <input type="text" value={form.ownerInfo.titleDeedType} onChange={(e) => update("ownerInfo", { ...form.ownerInfo, titleDeedType: e.target.value })} placeholder="เช่น บริษัท / บุคคล" className={smallInputCls} />
+          </div>
+          <div>
+            <label className={labelCls}>ค่าโอน</label>
+            <input type="text" value={form.ownerInfo.transferFee} onChange={(e) => update("ownerInfo", { ...form.ownerInfo, transferFee: e.target.value })} placeholder="เช่น คนละครึ่ง / ผู้ซื้อออก" className={smallInputCls} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={labelCls}>ก่อนเข้าดู (ต้องติดต่อก่อนกี่ ชม.)</label>
+            <input type="text" value={form.ownerInfo.viewingNotice} onChange={(e) => update("ownerInfo", { ...form.ownerInfo, viewingNotice: e.target.value })} placeholder="เช่น 24 ชม. / 1 วัน / นัดล่วงหน้า 2 วัน" className={smallInputCls} />
+          </div>
+        </div>
+      </fieldset>
+
       <button type="submit" disabled={saving} className="px-6 py-2.5 rounded-xl bg-blue text-white font-semibold disabled:opacity-70">
         {saving ? "กำลังบันทึก..." : "บันทึก"}
       </button>
@@ -463,55 +530,18 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
   );
 }
 
-const SKIP_COMPRESS = ["image/svg+xml", "image/gif"];
-
-async function compressFile(file: File): Promise<File> {
-  if (SKIP_COMPRESS.includes(file.type)) return file;
-  const compressed = await imageCompression(file, {
-    maxSizeMB: 1, maxWidthOrHeight: 1920, fileType: "image/webp", useWebWorker: true,
-  });
-  return new File([compressed], file.name.replace(/\.[^.]+$/, "") + ".webp", { type: "image/webp" });
-}
-
 function GallerySection({
   gallery,
   onChange,
+  onAdd,
   smallInputCls,
 }: {
   gallery: GalleryItem[];
   onChange: (g: GalleryItem[]) => void;
+  onAdd: (url: string) => void;
   smallInputCls: string;
 }) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
   const [editIdx, setEditIdx] = useState<number | null>(null);
-
-  async function handleMultiUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    e.target.value = "";
-    if (!files || files.length === 0) return;
-    setUploading(true);
-    const newItems: GalleryItem[] = [];
-    for (const file of Array.from(files)) {
-      try {
-        const compressed = await compressFile(file);
-        const formData = new FormData();
-        formData.set("file", compressed);
-        const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok && data.url) {
-          newItems.push({ label: "", area: "", imageUrl: data.url });
-        }
-      } catch { /* skip failed */ }
-    }
-    onChange([...gallery, ...newItems]);
-    setUploading(false);
-  }
-
-  function removeItem(idx: number) {
-    onChange(gallery.filter((_, i) => i !== idx));
-    if (editIdx === idx) setEditIdx(null);
-  }
 
   function updateItem(idx: number, field: keyof GalleryItem, value: string) {
     const next = [...gallery];
@@ -519,25 +549,22 @@ function GallerySection({
     onChange(next);
   }
 
+  function removeItem(idx: number) {
+    onChange(gallery.filter((_, i) => i !== idx));
+    if (editIdx === idx) setEditIdx(null);
+    else if (editIdx !== null && editIdx > idx) setEditIdx(editIdx - 1);
+  }
+
   return (
     <fieldset className="space-y-4 bg-white rounded-xl p-4 border border-gray-100">
       <legend className="text-sm font-semibold text-navy px-2">แกลเลอรี่รูปภาพ</legend>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
-        multiple
-        className="hidden"
-        onChange={handleMultiUpload}
-      />
 
       {gallery.length > 0 && (
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
           {gallery.map((g, i) => (
             <div key={i} className="relative group">
               <div
-                className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer transition ${editIdx === i ? "border-blue ring-2 ring-blue/30" : "border-gray-200 hover:border-gray-300"}`}
+                className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer transition ${editIdx === i ? "border-blue ring-2 ring-blue/30" : "border-gray-200 hover:border-blue/50"}`}
                 onClick={() => setEditIdx(editIdx === i ? null : i)}
               >
                 {g.imageUrl ? (
@@ -545,28 +572,29 @@ function GallerySection({
                 ) : (
                   <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs">ไม่มีรูป</div>
                 )}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center">
+                  <span className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition drop-shadow">
+                    {editIdx === i ? "ปิด" : "แก้ไข"}
+                  </span>
+                </div>
               </div>
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); removeItem(i); }}
-                className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-red-500 text-white text-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow"
+                onClick={(ev) => { ev.stopPropagation(); removeItem(i); }}
+                className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-red-500 text-white text-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow z-10"
                 title="ลบ"
-              >
-                ×
-              </button>
-              {g.label && (
-                <p className="text-[10px] text-gray-600 mt-1 truncate text-center">{g.label}</p>
-              )}
+              >×</button>
+              {g.label && <p className="text-[10px] text-gray-600 mt-1 truncate text-center">{g.label}</p>}
             </div>
           ))}
         </div>
       )}
 
       {editIdx !== null && editIdx < gallery.length && (
-        <div className="p-3 bg-blue/5 rounded-xl border border-blue/20 space-y-2">
+        <div className="p-3 bg-blue/5 rounded-xl border border-blue/20 space-y-2 animate-in fade-in duration-200">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-navy">แก้ไขภาพที่ {editIdx + 1}</span>
-            <button type="button" onClick={() => setEditIdx(null)} className="text-xs text-gray-500 hover:text-gray-700">ปิด</button>
+            <button type="button" onClick={() => setEditIdx(null)} className="text-xs text-gray-500 hover:text-gray-700">✕ ปิด</button>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             <input
@@ -584,19 +612,16 @@ function GallerySection({
               className={smallInputCls}
             />
           </div>
-          <ImageUploadField label="เปลี่ยนรูป" value={gallery[editIdx].imageUrl} onChange={(url) => updateItem(editIdx, "imageUrl", url)} />
+          <ImageUploadField
+            label="เปลี่ยนรูป"
+            value={gallery[editIdx].imageUrl}
+            onChange={(url) => updateItem(editIdx, "imageUrl", url)}
+          />
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={() => fileInputRef.current?.click()}
-        disabled={uploading}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-gray-300 text-sm text-navy hover:border-blue hover:text-blue transition w-full justify-center disabled:opacity-50"
-      >
-        {uploading ? "กำลังอัปโหลด..." : "เลือกรูปภาพ (เลือกได้หลายรูป)"}
-      </button>
-      <p className="text-xs text-gray-400">กดที่รูปเพื่อแก้ไขชื่อ/พื้นที่ของภาพนั้น</p>
+      <MultiImageUpload onUploaded={onAdd} />
+      <p className="text-xs text-gray-400">เลือกได้หลายรูปพร้อมกัน — บีบอัดเป็น WebP อัตโนมัติ — กดที่รูปเพื่อแก้ไขข้อมูล</p>
     </fieldset>
   );
 }

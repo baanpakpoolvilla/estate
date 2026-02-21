@@ -3,7 +3,7 @@ import Image from "next/image";
 import HeroSlider from "@/components/HeroSlider";
 import HomeSearch from "@/components/HomeSearch";
 import { getVillasForList, getProjectPromos, getArticlesForList } from "@/lib/data";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatNumber } from "@/lib/format";
 
 // ให้ render ฝั่ง server ทุกครั้ง เพื่อไม่ให้ build ล้มเหลวเมื่อไม่มี DB
 export const dynamic = "force-dynamic";
@@ -108,7 +108,7 @@ export default async function HomePage() {
                   <div className="bg-offwhite rounded-lg py-2 px-1">
                     <p className="text-gray-500 text-[10px] md:text-xs truncate">กำไร/เดือน</p>
                     <p className="text-green-700 font-semibold text-xs md:text-sm truncate">
-                      {villa.profitMonthly}
+                      ฿{formatNumber(villa.profitMonthly)}
                     </p>
                   </div>
                 </div>

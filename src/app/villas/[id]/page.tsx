@@ -3,7 +3,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getVillaForDetail, getContactSettings } from "@/lib/data";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatNumber } from "@/lib/format";
 import MapDisplay from "@/components/MapDisplay";
 
 type Params = { id: string };
@@ -27,7 +27,7 @@ export async function generateMetadata({
     const title = `${villa.name} | พูลวิลล่า ${villa.location}`;
     const description =
       villa.desc ||
-      `พูลวิลล่า ${villa.name} ทำเล${villa.location} ราคา ฿${formatPrice(villa.price)}${villa.roi ? ` ROI ~${villa.roi}%` : ""}${villa.investmentMonthly.profit ? ` กำไรประมาณ ${villa.investmentMonthly.profit}/เดือน` : ""}`;
+      `พูลวิลล่า ${villa.name} ทำเล${villa.location} ราคา ฿${formatPrice(villa.price)}${villa.roi ? ` ROI ~${villa.roi}%` : ""}${villa.investmentMonthly.profit ? ` กำไรประมาณ ฿${formatNumber(villa.investmentMonthly.profit)}/เดือน` : ""}`;
     return {
       title,
       description,
@@ -164,7 +164,7 @@ export default async function VillaDetailPage({
               {villa.investmentMonthly.profit && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">กำไรสุทธิต่อเดือน</span>
-                  <span className="font-semibold text-green-700">{villa.investmentMonthly.profit}</span>
+                  <span className="font-semibold text-green-700">฿{formatNumber(villa.investmentMonthly.profit)}</span>
                 </div>
               )}
             </div>
@@ -357,19 +357,19 @@ export default async function VillaDetailPage({
             {villa.investmentMonthly.revenue && (
               <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
                 <p className="text-gray-500 text-xs md:text-sm mb-1">รายได้เฉลี่ยต่อเดือน</p>
-                <p className="font-semibold text-green-700 text-lg md:text-xl">{villa.investmentMonthly.revenue}</p>
+                <p className="font-semibold text-green-700 text-lg md:text-xl">฿{formatNumber(villa.investmentMonthly.revenue)}</p>
               </div>
             )}
             {villa.investmentMonthly.expenses && (
               <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
                 <p className="text-gray-500 text-xs md:text-sm mb-1">ค่าใช้จ่ายเฉลี่ยต่อเดือน</p>
-                <p className="font-semibold text-navy text-lg md:text-xl">{villa.investmentMonthly.expenses}</p>
+                <p className="font-semibold text-navy text-lg md:text-xl">฿{formatNumber(villa.investmentMonthly.expenses)}</p>
               </div>
             )}
             {villa.investmentMonthly.profit && (
               <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
                 <p className="text-gray-500 text-xs md:text-sm mb-1">กำไรสุทธิเฉลี่ยต่อเดือน</p>
-                <p className="font-semibold text-green-700 text-lg md:text-xl">{villa.investmentMonthly.profit}</p>
+                <p className="font-semibold text-green-700 text-lg md:text-xl">฿{formatNumber(villa.investmentMonthly.profit)}</p>
               </div>
             )}
           </div>
@@ -396,8 +396,8 @@ export default async function VillaDetailPage({
                   {villa.accountingSummary.map((row) => (
                     <tr key={row.period} className="border-b last:border-none border-gray-100">
                       <td className="py-2 pr-4">{row.period}</td>
-                      <td className="py-2 pr-4">{row.revenue}</td>
-                      <td className="py-2 pr-4 text-green-700 font-medium">{row.profit}</td>
+                      <td className="py-2 pr-4">฿{formatNumber(row.revenue)}</td>
+                      <td className="py-2 pr-4 text-green-700 font-medium">฿{formatNumber(row.profit)}</td>
                     </tr>
                   ))}
                 </tbody>

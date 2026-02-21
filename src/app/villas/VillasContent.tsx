@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatNumber } from "@/lib/format";
 import type { VillaListItem } from "@/lib/data";
 
 type Filters = {
@@ -237,7 +237,7 @@ export default function VillasContent({ villas }: { villas: VillaListItem[] }) {
                     </div>
                     <div className="bg-offwhite rounded-lg py-2 px-1">
                       <p className="text-gray-500 text-[10px] md:text-xs truncate">กำไร/เดือน</p>
-                      <p className="text-green-700 font-semibold text-xs md:text-sm truncate">{villa.profitMonthly}</p>
+                      <p className="text-green-700 font-semibold text-xs md:text-sm truncate">฿{formatNumber(villa.profitMonthly)}</p>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-sm text-gray-600">
