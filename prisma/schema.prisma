@@ -24,6 +24,9 @@ model Villa {
   description        String?  @db.Text
   mainVideoId        String?
   imageUrl           String?  // รูปหลักสำหรับการ์ด/hero (ถ้าไม่มีใช้ YouTube thumb)
+  status             String?  @default("sale") // sale, rent
+  rentPeriod         String?  // monthly, yearly (ใช้เมื่อ status=rent)
+  propertyType       String?  @default("pool-villa") // pool-villa, townhouse, residential, land
   tag                String?
   sortOrder          Int      @default(0)
   isPublished        Boolean  @default(true)

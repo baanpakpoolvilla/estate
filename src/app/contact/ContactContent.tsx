@@ -19,13 +19,37 @@ const defaultContact: ContactSettingsItem = {
 
 export default function ContactContent({ contact }: { contact: ContactSettingsItem | null }) {
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const c = contact ?? defaultContact;
   const telHref = c.phone ? `tel:${c.phone.replace(/\D/g, "")}` : "#";
   const lineHref = c.lineUrl ?? "#";
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSent(true);
+    setError(null);
+    setSending(true);
+    const fd = new FormData(e.currentTarget);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: fd.get("name"),
+          phone: fd.get("phone"),
+          email: fd.get("email"),
+          interest: fd.get("interest"),
+          message: fd.get("message"),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "เกิดข้อผิดพลาด");
+      setSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด กรุณาลองใหม่");
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -116,11 +140,15 @@ export default function ContactContent({ contact }: { contact: ContactSettingsIt
             </p>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">
+              {error && (
+                <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+              )}
               <div className="space-y-1">
                 <label className="block text-xs md:text-sm text-gray-700">
                   ชื่อ–นามสกุล <span className="text-red-500">*</span>
                 </label>
                 <input
+                  name="name"
                   type="text"
                   placeholder="เช่น คุณสมชาย นักลงทุน"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-navy placeholder-gray-400"
@@ -132,6 +160,7 @@ export default function ContactContent({ contact }: { contact: ContactSettingsIt
                   เบอร์โทรศัพท์ <span className="text-red-500">*</span>
                 </label>
                 <input
+                  name="phone"
                   type="tel"
                   placeholder="กรอกเบอร์ที่สะดวกรับสาย"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-navy placeholder-gray-400"
@@ -141,6 +170,7 @@ export default function ContactContent({ contact }: { contact: ContactSettingsIt
               <div className="space-y-1">
                 <label className="block text-xs md:text-sm text-gray-700">อีเมล</label>
                 <input
+                  name="email"
                   type="email"
                   placeholder="หากสะดวกให้ติดต่อกลับทางอีเมล"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-navy placeholder-gray-400"
@@ -151,19 +181,21 @@ export default function ContactContent({ contact }: { contact: ContactSettingsIt
                   ความสนใจหลักของคุณ <span className="text-red-500">*</span>
                 </label>
                 <select
+                  name="interest"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-navy"
                   required
                 >
                   <option value="">เลือกความสนใจ</option>
-                  <option value="buy">สนใจซื้อ/ร่วมลงทุนพูลวิลล่า</option>
-                  <option value="info">ต้องการข้อมูลตัวเลขการลงทุนเพิ่มเติม</option>
-                  <option value="visit">ต้องการนัดดูบ้าน/ดูโครงการ</option>
-                  <option value="manage">มีบ้านต้องการให้ช่วยบริหารหรือช่วยขาย</option>
+                  <option value="สนใจซื้อ/ร่วมลงทุนพูลวิลล่า">สนใจซื้อ/ร่วมลงทุนพูลวิลล่า</option>
+                  <option value="ต้องการข้อมูลตัวเลขการลงทุนเพิ่มเติม">ต้องการข้อมูลตัวเลขการลงทุนเพิ่มเติม</option>
+                  <option value="ต้องการนัดดูบ้าน/ดูโครงการ">ต้องการนัดดูบ้าน/ดูโครงการ</option>
+                  <option value="มีบ้านต้องการให้ช่วยบริหารหรือช่วยขาย">มีบ้านต้องการให้ช่วยบริหารหรือช่วยขาย</option>
                 </select>
               </div>
               <div className="space-y-1">
                 <label className="block text-xs md:text-sm text-gray-700">รายละเอียดเพิ่มเติม</label>
                 <textarea
+                  name="message"
                   placeholder="ระบุงบประมาณ ทำเลที่สนใจ หรือบ้านหลังที่ต้องการทราบรายละเอียดเพิ่มเติม"
                   rows={4}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-navy placeholder-gray-400 resize-none"
@@ -171,9 +203,10 @@ export default function ContactContent({ contact }: { contact: ContactSettingsIt
               </div>
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-navy text-white font-semibold"
+                disabled={sending}
+                className="w-full py-3 rounded-xl bg-navy text-white font-semibold disabled:opacity-70"
               >
-                ส่งข้อมูลให้ทีมงานติดต่อกลับ
+                {sending ? "กำลังส่ง..." : "ส่งข้อมูลให้ทีมงานติดต่อกลับ"}
               </button>
             </form>
           )}

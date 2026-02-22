@@ -13,9 +13,18 @@ export type HeroVilla = {
   roi: string;
   profitMonthly?: string;
   tag?: string;
+  status?: string;
+  rentPeriod?: string | null;
+  propertyType?: string;
   imageUrl?: string | null;
   mainVideoId?: string;
 };
+
+const STATUS_LABELS: Record<string, string> = { sale: "ขาย", rent: "เช่า" };
+const RENT_PERIOD_LABELS: Record<string, string> = { monthly: "/เดือน", yearly: "/ปี" };
+const TYPE_LABELS: Record<string, string> = { "pool-villa": "พูลวิลล่า", townhouse: "ทาวน์เฮาส์", residential: "บ้านอยู่อาศัย", land: "ที่ดินเปล่า" };
+const STATUS_COLORS: Record<string, string> = { sale: "bg-blue text-white", rent: "bg-amber-500 text-white" };
+const TYPE_COLORS: Record<string, string> = { "pool-villa": "bg-navy/90 text-white", townhouse: "bg-violet-600/90 text-white", residential: "bg-emerald-600/90 text-white", land: "bg-orange-600/90 text-white" };
 
 const SLIDE_INTERVAL_MS = 5000;
 
@@ -57,8 +66,16 @@ export default function HeroSlider({ villas }: { villas: HeroVilla[] }) {
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/40 to-transparent" />
           <div className="absolute inset-0 flex flex-col justify-end p-4 sm:p-5 md:p-6 lg:p-8 pb-10 sm:pb-10 text-white overflow-hidden">
+            <div className="absolute top-3 left-3 flex flex-wrap gap-1">
+              <span className={`px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold ${STATUS_COLORS[villa.status ?? "sale"] ?? "bg-blue text-white"}`}>
+                {STATUS_LABELS[villa.status ?? "sale"] ?? "ขาย"}
+              </span>
+              <span className={`px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold ${TYPE_COLORS[villa.propertyType ?? "pool-villa"] ?? "bg-navy/90 text-white"}`}>
+                {TYPE_LABELS[villa.propertyType ?? "pool-villa"] ?? "พูลวิลล่า"}
+              </span>
+            </div>
             {villa.tag && (
-              <span className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-white/95 text-navy text-[10px] sm:text-xs font-medium">
+              <span className="absolute top-3 right-3 px-2.5 py-0.5 rounded-md bg-white/95 text-navy text-[10px] sm:text-xs font-medium">
                 {villa.tag}
               </span>
             )}
@@ -71,7 +88,7 @@ export default function HeroSlider({ villas }: { villas: HeroVilla[] }) {
             </p>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 mb-3">
               <span className="font-semibold text-blue-light text-sm sm:text-base whitespace-nowrap">
-                ฿{formatPrice(villa.price)}
+                ฿{formatPrice(villa.price)}{(villa.status ?? "sale") === "rent" ? (RENT_PERIOD_LABELS[villa.rentPeriod ?? "monthly"] ?? "/เดือน") : ""}
               </span>
               <span className="text-white/90 text-xs sm:text-sm whitespace-nowrap">
                 ROI ~{villa.roi}%

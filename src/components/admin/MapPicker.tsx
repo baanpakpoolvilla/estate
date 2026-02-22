@@ -43,6 +43,20 @@ function MapPickerInner({ lat, lng, onChange }: MapPickerProps) {
     return null;
   }
 
+  function FlyToPosition({ lat: fLat, lng: fLng }: { lat: number | null; lng: number | null }) {
+    const { useMap } = require("react-leaflet");
+    const map = useMap();
+    const prevRef = useRef<string>("");
+    useEffect(() => {
+      if (fLat == null || fLng == null) return;
+      const key = `${fLat},${fLng}`;
+      if (key === prevRef.current) return;
+      prevRef.current = key;
+      map.flyTo([fLat, fLng], 15, { duration: 1 });
+    }, [fLat, fLng, map]);
+    return null;
+  }
+
   const center: [number, number] =
     lat != null && lng != null ? [lat, lng] : DEFAULT_CENTER;
 
@@ -60,6 +74,7 @@ function MapPickerInner({ lat, lng, onChange }: MapPickerProps) {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <ClickHandler />
+      <FlyToPosition lat={lat} lng={lng} />
       {lat != null && lng != null && (
         <Marker position={[lat, lng]} ref={markerRef} />
       )}

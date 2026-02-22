@@ -6,6 +6,7 @@ import { useState } from "react";
 
 const navItems = [
   { href: "/admin", label: "แดชบอร์ด" },
+  { href: "/admin/inquiries", label: "ข้อมูลลูกค้า" },
   { href: "/admin/villas", label: "จัดการพูลวิลล่า" },
   { href: "/admin/projects", label: "จัดการโฆษณา/โครงการ" },
   { href: "/admin/articles", label: "จัดการบทความ" },

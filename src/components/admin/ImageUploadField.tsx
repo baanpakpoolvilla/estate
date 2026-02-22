@@ -72,8 +72,9 @@ export default function ImageUploadField({ value, onChange, label = "รูป�
         ref={inputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml"
-        className="hidden"
+        className="sr-only"
         onChange={handleFile}
+        tabIndex={-1}
       />
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>

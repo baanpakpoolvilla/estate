@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getArticleBySlugOrId } from "@/lib/data";
 import ArticleBody from "@/components/ArticleBody";
+import ShareButtons from "@/components/ShareButtons";
 
 function formatDate(d: Date | string | null | undefined): string {
   if (d == null) return "";
@@ -19,7 +20,7 @@ type Params = { slug: string };
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://topform-realestate.com");
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://topformestate.com");
 
 // ให้ Vercel/production ดึงข้อมูลจาก DB ทุกครั้ง เหมือน localhost
 export const dynamic = "force-dynamic";
@@ -45,12 +46,21 @@ export async function generateMetadata({
       openGraph: {
         title: `${title} | ท๊อปฟอร์ม อสังหาริมทรัพย์`,
         description,
-        ...(article.coverImageUrl && { images: [article.coverImageUrl] }),
+        url: `${siteUrl}/articles/${article.slug}`,
         type: "article",
         publishedTime: article.publishedAt
           ? new Date(article.publishedAt).toISOString()
           : undefined,
         ...(keywords && { tags: keywords }),
+        ...(article.coverImageUrl && {
+          images: [{ url: article.coverImageUrl, width: 1200, height: 630, alt: title }],
+        }),
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        ...(article.coverImageUrl && { images: [article.coverImageUrl] }),
       },
       alternates: { canonical: `/articles/${article.slug}` },
     };
@@ -141,6 +151,9 @@ export default async function ArticleDetailPage({
             เผยแพร่เมื่อ {formatDate(article.publishedAt)}
           </p>
         )}
+        <div className="mt-3">
+          <ShareButtons url={`${siteUrl}/articles/${article.slug}`} title={article.title} />
+        </div>
       </header>
 
       {/* คำอธิบายย่อ */}

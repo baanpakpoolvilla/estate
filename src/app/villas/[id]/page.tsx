@@ -5,6 +5,13 @@ import { notFound } from "next/navigation";
 import { getVillaForDetail, getContactSettings } from "@/lib/data";
 import { formatPrice, formatNumber } from "@/lib/format";
 import MapDisplay from "@/components/MapDisplay";
+import DetailGallery from "@/components/DetailGallery";
+
+const STATUS_LABELS: Record<string, string> = { sale: "ขาย", rent: "เช่า" };
+const RENT_PERIOD_LABELS: Record<string, string> = { monthly: "/เดือน", yearly: "/ปี" };
+const TYPE_LABELS: Record<string, string> = { "pool-villa": "พูลวิลล่า", townhouse: "ทาวน์เฮาส์", residential: "บ้านอยู่อาศัย", land: "ที่ดินเปล่า" };
+const STATUS_COLORS: Record<string, string> = { sale: "bg-blue text-white", rent: "bg-amber-500 text-white" };
+const TYPE_COLORS: Record<string, string> = { "pool-villa": "bg-navy/90 text-white", townhouse: "bg-violet-600/90 text-white", residential: "bg-emerald-600/90 text-white", land: "bg-orange-600/90 text-white" };
 
 type Params = { id: string };
 
@@ -124,6 +131,14 @@ export default async function VillaDetailPage({
       {/* ภาพรวมบ้าน + ตัวเลขสรุปหลัก */}
       <section className="grid md:grid-cols-3 gap-6 md:gap-8 items-start">
         <div className="md:col-span-2 space-y-3">
+          <div className="flex flex-wrap gap-1.5 mb-1">
+            <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold ${STATUS_COLORS[villa.status] ?? "bg-blue text-white"}`}>
+              {STATUS_LABELS[villa.status] ?? "ขาย"}
+            </span>
+            <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold ${TYPE_COLORS[villa.propertyType] ?? "bg-navy/90 text-white"}`}>
+              {TYPE_LABELS[villa.propertyType] ?? "พูลวิลล่า"}
+            </span>
+          </div>
           <h1 className="font-bold text-xl md:text-2xl lg:text-3xl text-navy">
             {villa.name}
           </h1>
@@ -134,17 +149,44 @@ export default async function VillaDetailPage({
               dangerouslySetInnerHTML={{ __html: villa.desc }}
             />
           )}
-          <ul className="mt-3 text-sm md:text-base text-gray-700 space-y-1">
-            {villa.land > 0 && <li>ที่ดิน {villa.land} ตร.ว.</li>}
-            {villa.sqm > 0 && <li>พื้นที่ใช้สอย {villa.sqm} ตร.ม.</li>}
-            {(villa.beds > 0 || villa.baths > 0) && (
-              <li>
-                {villa.beds > 0 && `ห้องนอน ${villa.beds} ห้อง`}
-                {villa.beds > 0 && villa.baths > 0 && " / "}
-                {villa.baths > 0 && `ห้องน้ำ ${villa.baths} ห้อง`}
-              </li>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4">
+            {villa.beds > 0 && (
+              <div className="flex items-center gap-2.5 bg-offwhite rounded-xl px-3.5 py-3 border border-gray-100">
+                <svg className="w-5 h-5 text-blue shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
+                <div>
+                  <p className="text-navy font-bold text-lg leading-tight">{villa.beds}</p>
+                  <p className="text-gray-500 text-xs">ห้องนอน</p>
+                </div>
+              </div>
             )}
-          </ul>
+            {villa.baths > 0 && (
+              <div className="flex items-center gap-2.5 bg-offwhite rounded-xl px-3.5 py-3 border border-gray-100">
+                <svg className="w-5 h-5 text-blue shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <div>
+                  <p className="text-navy font-bold text-lg leading-tight">{villa.baths}</p>
+                  <p className="text-gray-500 text-xs">ห้องน้ำ</p>
+                </div>
+              </div>
+            )}
+            {villa.sqm > 0 && (
+              <div className="flex items-center gap-2.5 bg-offwhite rounded-xl px-3.5 py-3 border border-gray-100">
+                <svg className="w-5 h-5 text-blue shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>
+                <div>
+                  <p className="text-navy font-bold text-lg leading-tight">{villa.sqm}</p>
+                  <p className="text-gray-500 text-xs">ตร.ม.</p>
+                </div>
+              </div>
+            )}
+            {villa.land > 0 && (
+              <div className="flex items-center gap-2.5 bg-offwhite rounded-xl px-3.5 py-3 border border-gray-100">
+                <svg className="w-5 h-5 text-blue shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" /></svg>
+                <div>
+                  <p className="text-navy font-bold text-lg leading-tight">{villa.land}</p>
+                  <p className="text-gray-500 text-xs">ตร.ว.</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="space-y-3">
@@ -152,8 +194,8 @@ export default async function VillaDetailPage({
             <h2 className="font-semibold text-navy mb-2 md:text-lg">ตัวเลขหลักของบ้าน</h2>
             <div className="space-y-2 text-sm md:text-base">
               <div className="flex justify-between">
-                <span className="text-gray-600">ราคาขาย</span>
-                <span className="font-semibold text-blue">฿{formatPrice(villa.price)}</span>
+                <span className="text-gray-600">{villa.status === "rent" ? "ค่าเช่า" : "ราคาขาย"}</span>
+                <span className="font-semibold text-blue">฿{formatPrice(villa.price)}{villa.status === "rent" ? (RENT_PERIOD_LABELS[villa.rentPeriod ?? "monthly"] ?? "/เดือน") : ""}</span>
               </div>
               {villa.roi && (
                 <div className="flex justify-between">
@@ -224,33 +266,6 @@ export default async function VillaDetailPage({
                 </div>
               </div>
             ))}
-          </div>
-        </section>
-      )}
-
-      {/* แกลเลอรี่รูปภาพ */}
-      {villa.gallery.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="font-semibold text-navy text-lg md:text-xl">รูปภาพของบ้าน</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-            {villa.gallery.map((item, idx) => {
-              const url = (item.imageUrls ?? [])[0];
-              if (!url) return null;
-              return (
-                <div
-                  key={`gallery-${idx}`}
-                  className="relative aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 shadow-sm"
-                >
-                  <Image src={url} alt={item.label || ""} fill sizes="(max-width:768px) 50vw, (max-width:1024px) 33vw, 25vw" className="object-cover" />
-                  {(item.label || item.area) && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-navy/70 to-transparent p-2.5">
-                      <p className="text-white text-xs font-medium truncate">{item.label}</p>
-                      {item.area && <p className="text-white/70 text-[11px] truncate">{item.area}</p>}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
           </div>
         </section>
       )}
@@ -404,6 +419,18 @@ export default async function VillaDetailPage({
               </table>
             </div>
           </div>
+        </section>
+      )}
+
+      {/* แกลเลอรี่ */}
+      {villa.gallery.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="font-semibold text-navy text-lg md:text-xl">แกลเลอรี่</h2>
+          <DetailGallery
+            images={villa.gallery
+              .map((item) => ({ url: (item.imageUrls ?? [])[0] ?? "", label: item.label || "", area: item.area || "" }))
+              .filter((img) => img.url)}
+          />
         </section>
       )}
 

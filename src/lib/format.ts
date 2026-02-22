@@ -1,11 +1,11 @@
 /**
- * แปลงราคาจากหน่วยล้านบาท (เช่น "12.9") เป็นจำนวนเต็มมี comma (เช่น "12,900,000")
+ * แปลงราคาเต็มจำนวน (เช่น "20500000") เป็นรูปแบบมี comma (เช่น "20,500,000")
  */
-export function formatPrice(millionStr: string): string {
-  const num = parseFloat(millionStr);
-  if (isNaN(num)) return millionStr;
-  const full = Math.round(num * 1_000_000);
-  return full.toLocaleString("en-US");
+export function formatPrice(value: string): string {
+  const cleaned = String(value).replace(/,/g, "").trim();
+  const num = parseFloat(cleaned);
+  if (isNaN(num)) return value;
+  return Math.round(num).toLocaleString("en-US");
 }
 
 /**

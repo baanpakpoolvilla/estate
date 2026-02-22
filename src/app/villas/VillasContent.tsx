@@ -10,6 +10,8 @@ import type { VillaListItem } from "@/lib/data";
 type Filters = {
   search: string;
   location: string;
+  status: string;
+  propertyType: string;
   priceMin: string;
   priceMax: string;
   bedsMin: string;
@@ -18,9 +20,16 @@ type Filters = {
 };
 
 const defaultFilters: Filters = {
-  search: "", location: "", priceMin: "", priceMax: "",
+  search: "", location: "", status: "", propertyType: "",
+  priceMin: "", priceMax: "",
   bedsMin: "", bathsMin: "", sort: "default",
 };
+
+const STATUS_LABELS: Record<string, string> = { sale: "ขาย", rent: "เช่า" };
+const RENT_PERIOD_LABELS: Record<string, string> = { monthly: "/เดือน", yearly: "/ปี" };
+const TYPE_LABELS: Record<string, string> = { "pool-villa": "พูลวิลล่า", townhouse: "ทาวน์เฮาส์", residential: "บ้านอยู่อาศัย", land: "ที่ดินเปล่า" };
+const STATUS_COLORS: Record<string, string> = { sale: "bg-blue text-white", rent: "bg-amber-500 text-white" };
+const TYPE_COLORS: Record<string, string> = { "pool-villa": "bg-navy/90 text-white", townhouse: "bg-violet-600/90 text-white", residential: "bg-emerald-600/90 text-white", land: "bg-orange-600/90 text-white" };
 
 export default function VillasContent({ villas }: { villas: VillaListItem[] }) {
   const searchParams = useSearchParams();
@@ -42,6 +51,8 @@ export default function VillasContent({ villas }: { villas: VillaListItem[] }) {
     const q = filters.search.toLowerCase().trim();
     if (q) list = list.filter((v) => v.name.toLowerCase().includes(q) || v.location.toLowerCase().includes(q));
     if (filters.location) list = list.filter((v) => v.location === filters.location);
+    if (filters.status) list = list.filter((v) => (v.status ?? "sale") === filters.status);
+    if (filters.propertyType) list = list.filter((v) => (v.propertyType ?? "pool-villa") === filters.propertyType);
     const pMin = parseFloat(filters.priceMin);
     if (!isNaN(pMin)) list = list.filter((v) => parseFloat(v.price) >= pMin);
     const pMax = parseFloat(filters.priceMax);
@@ -56,7 +67,7 @@ export default function VillasContent({ villas }: { villas: VillaListItem[] }) {
     return list;
   }, [villas, filters]);
 
-  const hasActiveFilter = filters.search || filters.location || filters.priceMin || filters.priceMax || filters.bedsMin || filters.bathsMin;
+  const hasActiveFilter = filters.search || filters.location || filters.status || filters.propertyType || filters.priceMin || filters.priceMax || filters.bedsMin || filters.bathsMin;
 
   const selectCls = "w-full px-3 py-2 rounded-lg border border-gray-200 text-navy text-sm bg-white";
   const inputCls = "w-full px-3 py-2 rounded-lg border border-gray-200 text-navy text-sm";
@@ -86,13 +97,35 @@ export default function VillasContent({ villas }: { villas: VillaListItem[] }) {
         </select>
       </div>
 
+      {/* สถานะ & ประเภท */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-semibold text-navy mb-1.5">สถานะ</label>
+          <select value={filters.status} onChange={(e) => set("status", e.target.value)} className={selectCls}>
+            <option value="">ทั้งหมด</option>
+            <option value="sale">ขาย</option>
+            <option value="rent">เช่า</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-navy mb-1.5">ประเภท</label>
+          <select value={filters.propertyType} onChange={(e) => set("propertyType", e.target.value)} className={selectCls}>
+            <option value="">ทั้งหมด</option>
+            <option value="pool-villa">พูลวิลล่า</option>
+            <option value="townhouse">ทาวน์เฮาส์</option>
+            <option value="residential">บ้านอยู่อาศัย</option>
+            <option value="land">ที่ดินเปล่า</option>
+          </select>
+        </div>
+      </div>
+
       {/* ราคา */}
       <div>
-        <label className="block text-xs font-semibold text-navy mb-1.5">ราคา (ล้านบาท)</label>
+        <label className="block text-xs font-semibold text-navy mb-1.5">ราคา (บาท)</label>
         <div className="flex gap-2 items-center">
-          <input type="number" value={filters.priceMin} onChange={(e) => set("priceMin", e.target.value)} placeholder="ต่ำสุด" className={inputCls} min={0} step={0.5} />
+          <input type="number" value={filters.priceMin} onChange={(e) => set("priceMin", e.target.value)} placeholder="ต่ำสุด" className={inputCls} min={0} step={100000} />
           <span className="text-gray-400 text-xs shrink-0">—</span>
-          <input type="number" value={filters.priceMax} onChange={(e) => set("priceMax", e.target.value)} placeholder="สูงสุด" className={inputCls} min={0} step={0.5} />
+          <input type="number" value={filters.priceMax} onChange={(e) => set("priceMax", e.target.value)} placeholder="สูงสุด" className={inputCls} min={0} step={100000} />
         </div>
       </div>
 
@@ -216,36 +249,39 @@ export default function VillasContent({ villas }: { villas: VillaListItem[] }) {
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-navy/80 via-transparent to-transparent" />
+                  <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold ${STATUS_COLORS[villa.status ?? "sale"] ?? "bg-blue text-white"}`}>
+                      {STATUS_LABELS[villa.status ?? "sale"] ?? "ขาย"}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold ${TYPE_COLORS[villa.propertyType ?? "pool-villa"] ?? "bg-navy/90 text-white"}`}>
+                      {TYPE_LABELS[villa.propertyType ?? "pool-villa"] ?? "พูลวิลล่า"}
+                    </span>
+                  </div>
                   {villa.tag && (
-                    <span className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-white/95 text-navy text-xs font-medium">{villa.tag}</span>
+                    <span className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-white/95 text-navy text-[10px] sm:text-xs font-medium">{villa.tag}</span>
                   )}
                   <span className="absolute bottom-2 left-2 text-white/90 text-xs font-medium">
                     {villa.mainVideoId ? "ดูวิดีโอ + รายละเอียดการลงทุน" : "ดูรูปภาพ + รายละเอียดการลงทุน"}
                   </span>
                 </div>
                 <div className="p-4 sm:p-5">
-                  <h2 className="font-semibold text-navy text-base sm:text-lg group-hover:text-blue">{villa.name}</h2>
+                  <h2 className="font-semibold text-navy text-base sm:text-lg group-hover:text-blue line-clamp-1">{villa.name}</h2>
                   <p className="text-gray-500 text-sm mt-0.5">{villa.location}</p>
-                  <div className="grid grid-cols-3 gap-2 mt-3 text-center">
-                    <div className="bg-offwhite rounded-lg py-2 px-1">
-                      <p className="text-gray-500 text-[10px] md:text-xs truncate">ราคา</p>
-                      <p className="text-blue font-semibold text-xs md:text-sm truncate">฿{formatPrice(villa.price)}</p>
-                    </div>
-                    <div className="bg-offwhite rounded-lg py-2 px-1">
-                      <p className="text-gray-500 text-[10px] md:text-xs truncate">ROI</p>
-                      <p className="text-navy font-semibold text-xs md:text-sm">~{villa.roi}%</p>
-                    </div>
-                    <div className="bg-offwhite rounded-lg py-2 px-1">
-                      <p className="text-gray-500 text-[10px] md:text-xs truncate">กำไร/เดือน</p>
-                      <p className="text-green-700 font-semibold text-xs md:text-sm truncate">฿{formatNumber(villa.profitMonthly)}</p>
-                    </div>
+                  <p className="text-blue font-bold text-base md:text-lg mt-2">
+                    ฿{formatPrice(villa.price)}{(villa.status ?? "sale") === "rent" ? (RENT_PERIOD_LABELS[villa.rentPeriod ?? "monthly"] ?? "/เดือน") : ""}
+                  </p>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-sm text-gray-600">
+                    {villa.beds > 0 && <span>{villa.beds} ห้องนอน</span>}
+                    {villa.baths > 0 && <span>{villa.baths} ห้องน้ำ</span>}
+                    {villa.sqm > 0 && <span>{villa.sqm} ตร.ม.</span>}
                   </div>
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 text-sm text-gray-600">
-                    <span>{villa.beds} ห้องนอน</span>
-                    <span>{villa.baths} ห้องน้ำ</span>
-                    <span>{villa.sqm} ตร.ม.</span>
-                  </div>
-                  <p className="mt-3 pt-3 border-t border-gray-100 text-blue text-sm font-medium">ดูรายละเอียดการลงทุน</p>
+                  {(villa.roi || villa.profitMonthly) && (
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm">
+                      {villa.roi && <span className="text-navy font-medium">ROI ~{villa.roi}%</span>}
+                      {villa.profitMonthly && <span className="text-green-700 font-medium">รายได้ ฿{formatNumber(villa.profitMonthly)}/เดือน</span>}
+                    </div>
+                  )}
+                  <p className="mt-3 pt-3 border-t border-gray-100 text-blue text-sm font-medium">ดูรายละเอียด</p>
                 </div>
               </Link>
             ))}

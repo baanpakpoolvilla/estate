@@ -5,6 +5,7 @@ import ImageUploadField from "@/components/admin/ImageUploadField";
 import MultiImageUpload from "@/components/admin/MultiImageUpload";
 import QuillEditor from "@/components/admin/QuillEditor";
 import MapPicker from "@/components/admin/MapPicker";
+import MapSearchBox from "@/components/admin/MapSearchBox";
 
 type AreaVideo = { label: string; youtubeId: string };
 type GalleryItem = { label: string; area: string; imageUrl: string };
@@ -57,6 +58,9 @@ export type VillaFormData = {
   mainVideoId: string;
   imageUrl: string;
   tag: string;
+  status: string;
+  rentPeriod: string;
+  propertyType: string;
   sortOrder: number;
   isPublished: boolean;
   areaVideos: AreaVideo[];
@@ -93,6 +97,7 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
         price: "", roi: "",
         beds: 0, baths: 0, sqm: 0, land: "",
         description: "", mainVideoId: "", imageUrl: "", tag: "",
+        status: "sale", rentPeriod: "", propertyType: "pool-villa",
         sortOrder: 0, isPublished: true,
         areaVideos: [], gallery: [], rentalHistory: [],
         businessHistory: "", salePlan: "",
@@ -124,6 +129,9 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
       mainVideoId: String(initial.mainVideoId ?? ""),
       imageUrl: String(initial.imageUrl ?? ""),
       tag: String(initial.tag ?? ""),
+      status: String(initial.status ?? "sale"),
+      rentPeriod: String(initial.rentPeriod ?? ""),
+      propertyType: String(initial.propertyType ?? "pool-villa"),
       sortOrder: Number(initial.sortOrder) || 0,
       isPublished: initial.isPublished !== false,
       areaVideos: parseArr<AreaVideo>(initial.areaVideos),
@@ -169,6 +177,9 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
         mainVideoId: form.mainVideoId || null,
         imageUrl: form.imageUrl || null,
         tag: form.tag || null,
+        status: form.status,
+        rentPeriod: form.status === "rent" ? (form.rentPeriod || "monthly") : null,
+        propertyType: form.propertyType,
         sortOrder: form.sortOrder,
         isPublished: form.isPublished,
         areaVideos: form.areaVideos.filter((v) => v.label || v.youtubeId),
@@ -222,8 +233,13 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
           </div>
         </div>
         <div>
-          <label className={labelCls}>ตำแหน่งบนแผนที่ (กดที่แผนที่เพื่อปักหมุด)</label>
-          <div className="rounded-xl overflow-hidden border border-gray-200" style={{ height: 320 }}>
+          <label className={labelCls}>ตำแหน่งบนแผนที่ (ค้นหาหรือกดที่แผนที่เพื่อปักหมุด)</label>
+          <MapSearchBox onSelect={(lat, lng, address) => {
+            update("latitude", lat);
+            update("longitude", lng);
+            if (address) update("address", address);
+          }} />
+          <div className="rounded-xl overflow-hidden border border-gray-200 mt-2" style={{ height: 320 }}>
             <MapPicker
               lat={form.latitude}
               lng={form.longitude}
@@ -275,9 +291,34 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
         <legend className="text-sm font-semibold text-navy px-2">สเปกบ้าน</legend>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className={labelCls}>ราคา (ล้านบาท) *</label>
-            <input type="text" value={form.price} onChange={(e) => update("price", e.target.value)} placeholder="12.9" className={inputCls} required />
+            <label className={labelCls}>สถานะ</label>
+            <select value={form.status} onChange={(e) => update("status", e.target.value)} className={inputCls}>
+              <option value="sale">ขาย</option>
+              <option value="rent">เช่า</option>
+            </select>
           </div>
+          <div>
+            <label className={labelCls}>ประเภท</label>
+            <select value={form.propertyType} onChange={(e) => update("propertyType", e.target.value)} className={inputCls}>
+              <option value="pool-villa">พูลวิลล่า</option>
+              <option value="townhouse">ทาวน์เฮาส์</option>
+              <option value="residential">บ้านอยู่อาศัย</option>
+              <option value="land">ที่ดินเปล่า</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>{form.status === "rent" ? "ค่าเช่า (บาท) *" : "ราคา (บาท) *"}</label>
+            <input type="number" min={0} step={1} value={form.price} onChange={(e) => update("price", e.target.value)} placeholder={form.status === "rent" ? "35000" : "20500000"} className={inputCls} required />
+          </div>
+          {form.status === "rent" && (
+            <div>
+              <label className={labelCls}>ระยะเวลาเช่า</label>
+              <select value={form.rentPeriod || "monthly"} onChange={(e) => update("rentPeriod", e.target.value)} className={inputCls}>
+                <option value="monthly">บาท/เดือน</option>
+                <option value="yearly">บาท/ปี</option>
+              </select>
+            </div>
+          )}
           <div>
             <label className={labelCls}>ROI (%)</label>
             <input type="text" value={form.roi} onChange={(e) => update("roi", e.target.value)} placeholder="8.5" className={inputCls} />

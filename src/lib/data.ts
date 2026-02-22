@@ -13,9 +13,13 @@ export type VillaListItem = {
   mainVideoId: string;
   imageUrl?: string | null;
   tag?: string | null;
+  status?: string | null;
+  rentPeriod?: string | null;
+  propertyType?: string | null;
 };
 
 export type VillaDetail = {
+  id: string;
   name: string;
   location: string;
   address: string | null;
@@ -23,6 +27,9 @@ export type VillaDetail = {
   longitude: number | null;
   price: string;
   roi: string;
+  status: string;
+  rentPeriod: string | null;
+  propertyType: string;
   beds: number;
   baths: number;
   sqm: number;
@@ -154,6 +161,9 @@ export async function getVillasForList(): Promise<VillaListItem[]> {
     mainVideoId: v.mainVideoId ?? "",
     imageUrl: v.imageUrl ?? null,
     tag: v.tag,
+    status: v.status ?? "sale",
+    rentPeriod: v.rentPeriod ?? null,
+    propertyType: v.propertyType ?? "pool-villa",
   }));
 }
 
@@ -175,6 +185,7 @@ export async function getVillaForDetail(id: string): Promise<VillaDetail | null>
   const accountingSummaryRaw = v.accountingSummary as { period: string; revenue: string; profit: string }[] | null | undefined;
   const accountingSummary = Array.isArray(accountingSummaryRaw) ? accountingSummaryRaw : [];
   return {
+    id: v.id,
     name: v.name,
     location: v.location,
     address: v.address ?? null,
@@ -182,6 +193,9 @@ export async function getVillaForDetail(id: string): Promise<VillaDetail | null>
     longitude: v.longitude ?? null,
     price: v.price,
     roi: v.roi,
+    status: v.status ?? "sale",
+    rentPeriod: v.rentPeriod ?? null,
+    propertyType: v.propertyType ?? "pool-villa",
     beds: v.beds,
     baths: v.baths,
     sqm: v.sqm,

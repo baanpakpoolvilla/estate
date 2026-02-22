@@ -1,10 +1,13 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Sarabun } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Favicon from "@/components/Favicon";
 import { getContactSettings } from "@/lib/data";
+
+const GA_ID = "G-RHYB9PLGVF";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -22,7 +25,7 @@ const sarabun = Sarabun({
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://topform-realestate.com");
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://topformestate.com");
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -88,9 +91,17 @@ export default async function RootLayout({
   return (
     <html lang="th" className={sarabun.variable}>
       <head>
+        <meta name="google-site-verification" content="g29BKjl1my4vhu9PafB8xZ3kpfQBT0dRt3BIvAOIQys" />
         <link rel="dns-prefetch" href="https://dvwskeqmxwysebrusfdt.supabase.co" />
         <link rel="preconnect" href="https://dvwskeqmxwysebrusfdt.supabase.co" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://img.youtube.com" />
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}');`}
+        </Script>
       </head>
       <body
         className="min-h-screen flex flex-col bg-offwhite text-navy"

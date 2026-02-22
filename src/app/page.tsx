@@ -5,6 +5,12 @@ import HomeSearch from "@/components/HomeSearch";
 import { getVillasForList, getProjectPromos, getArticlesForList } from "@/lib/data";
 import { formatPrice, formatNumber } from "@/lib/format";
 
+const STATUS_LABELS: Record<string, string> = { sale: "ขาย", rent: "เช่า" };
+const RENT_PERIOD_LABELS: Record<string, string> = { monthly: "/เดือน", yearly: "/ปี" };
+const TYPE_LABELS: Record<string, string> = { "pool-villa": "พูลวิลล่า", townhouse: "ทาวน์เฮาส์", residential: "บ้านอยู่อาศัย", land: "ที่ดินเปล่า" };
+const STATUS_COLORS: Record<string, string> = { sale: "bg-blue text-white", rent: "bg-amber-500 text-white" };
+const TYPE_COLORS: Record<string, string> = { "pool-villa": "bg-navy/90 text-white", townhouse: "bg-violet-600/90 text-white", residential: "bg-emerald-600/90 text-white", land: "bg-orange-600/90 text-white" };
+
 // ให้ render ฝั่ง server ทุกครั้ง เพื่อไม่ให้ build ล้มเหลวเมื่อไม่มี DB
 export const dynamic = "force-dynamic";
 
@@ -43,6 +49,9 @@ export default async function HomePage() {
     roi: v.roi,
     profitMonthly: v.profitMonthly,
     tag: v.tag ?? undefined,
+    status: v.status ?? "sale",
+    rentPeriod: v.rentPeriod ?? null,
+    propertyType: v.propertyType ?? "pool-villa",
     imageUrl: v.imageUrl,
     mainVideoId: v.mainVideoId,
   }));
@@ -83,37 +92,41 @@ export default async function HomePage() {
                   <div className="w-full h-full bg-gradient-to-br from-navy via-blue/30 to-navy" />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-navy/60 via-transparent to-transparent" />
+                <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+                  <span className={`px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold ${STATUS_COLORS[villa.status ?? "sale"] ?? "bg-blue text-white"}`}>
+                    {STATUS_LABELS[villa.status ?? "sale"] ?? "ขาย"}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold ${TYPE_COLORS[villa.propertyType ?? "pool-villa"] ?? "bg-navy/90 text-white"}`}>
+                    {TYPE_LABELS[villa.propertyType ?? "pool-villa"] ?? "พูลวิลล่า"}
+                  </span>
+                </div>
                 {villa.tag && (
-                  <span className="absolute top-2 right-2 px-2 py-1 rounded-lg bg-white/95 text-navy text-xs font-medium">
+                  <span className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-white/95 text-navy text-[10px] sm:text-xs font-medium">
                     {villa.tag}
                   </span>
                 )}
               </div>
               <div className="p-4 md:p-5">
-                <h3 className="font-semibold text-navy text-base md:text-lg group-hover:text-blue">
+                <h3 className="font-semibold text-navy text-base md:text-lg group-hover:text-blue line-clamp-1">
                   {villa.name}
                 </h3>
                 <p className="text-gray-500 text-sm mt-0.5">{villa.location}</p>
-                <div className="grid grid-cols-3 gap-2 mt-3 text-center">
-                  <div className="bg-offwhite rounded-lg py-2 px-1">
-                    <p className="text-gray-500 text-[10px] md:text-xs truncate">ราคา</p>
-                    <p className="text-blue font-semibold text-xs md:text-sm truncate">
-                      ฿{formatPrice(villa.price)}
-                    </p>
-                  </div>
-                  <div className="bg-offwhite rounded-lg py-2 px-1">
-                    <p className="text-gray-500 text-[10px] md:text-xs truncate">ROI</p>
-                    <p className="text-navy font-semibold text-xs md:text-sm">~{villa.roi}%</p>
-                  </div>
-                  <div className="bg-offwhite rounded-lg py-2 px-1">
-                    <p className="text-gray-500 text-[10px] md:text-xs truncate">กำไร/เดือน</p>
-                    <p className="text-green-700 font-semibold text-xs md:text-sm truncate">
-                      ฿{formatNumber(villa.profitMonthly)}
-                    </p>
-                  </div>
+                <p className="text-blue font-bold text-base md:text-lg mt-2">
+                  ฿{formatPrice(villa.price)}{(villa.status ?? "sale") === "rent" ? (RENT_PERIOD_LABELS[villa.rentPeriod ?? "monthly"] ?? "/เดือน") : ""}
+                </p>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-sm text-gray-600">
+                  {villa.beds > 0 && <span>{villa.beds} ห้องนอน</span>}
+                  {villa.baths > 0 && <span>{villa.baths} ห้องน้ำ</span>}
+                  {villa.sqm > 0 && <span>{villa.sqm} ตร.ม.</span>}
                 </div>
-                <p className="mt-3 text-blue text-sm font-medium">
-                  {villa.mainVideoId ? "ดูวิดีโอ แกลลอรี่ และรายละเอียดการลงทุน" : "ดูรูปภาพ แกลลอรี่ และรายละเอียดการลงทุน"}
+                {(villa.roi || villa.profitMonthly) && (
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm">
+                    {villa.roi && <span className="text-navy font-medium">ROI ~{villa.roi}%</span>}
+                    {villa.profitMonthly && <span className="text-green-700 font-medium">รายได้ ฿{formatNumber(villa.profitMonthly)}/เดือน</span>}
+                  </div>
+                )}
+                <p className="mt-3 pt-3 border-t border-gray-100 text-blue text-sm font-medium">
+                  ดูรายละเอียด
                 </p>
               </div>
             </Link>
