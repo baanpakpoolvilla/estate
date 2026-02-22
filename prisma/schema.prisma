@@ -77,6 +77,17 @@ model ContactSettings {
   updatedAt           DateTime @updatedAt
 }
 
+model ContactInquiry {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  interest  String
+  message   String?  @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
 model Article {
   id              String    @id @default(cuid())
   title           String
