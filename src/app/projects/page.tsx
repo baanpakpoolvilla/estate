@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { getProjectPromos, getContactSettings } from "@/lib/data";
+import { isExternalImage } from "@/lib/image-utils";
 
 export const metadata: Metadata = {
   title: "โครงการพูลวิลล่าหรู และโครงการใหม่",
@@ -62,7 +63,7 @@ export default async function ProjectsPage() {
             >
               <div className="relative aspect-[21/10] bg-gradient-to-br from-navy via-blue/30 to-navy overflow-hidden">
                 {project.imageUrl ? (
-                  <Image src={project.imageUrl} alt={project.name} fill sizes="(max-width:640px) 100vw, 50vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <Image src={project.imageUrl} alt={project.name} fill sizes="(max-width:640px) 100vw, 50vw" className="object-cover group-hover:scale-105 transition-transform duration-300" unoptimized={isExternalImage(project.imageUrl)} />
                 ) : null}
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue/40 via-transparent to-transparent" />
                 <div className="absolute inset-0 flex flex-col justify-end p-4 md:p-5 text-white">

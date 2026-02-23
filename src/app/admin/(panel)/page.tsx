@@ -16,9 +16,14 @@ export default function AdminDashboardPage() {
           <p className="text-gray-600 text-sm md:text-base mb-3">
             เพิ่ม/แก้ไขข้อมูลบ้าน ภาพ วิดีโอ ประวัติการเช่า และตัวเลขการลงทุน
           </p>
-          <Link href="/admin/villas" className="text-blue text-sm font-medium hover:underline">
-            ไปที่จัดการพูลวิลล่า
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/admin/villas" className="text-blue text-sm font-medium hover:underline">
+              ไปที่จัดการพูลวิลล่า
+            </Link>
+            <Link href="/admin/import-villa" className="text-blue text-sm font-medium hover:underline">
+              นำเข้าข้อมูลจากลิงก์
+            </Link>
+          </div>
         </section>
 
         <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">

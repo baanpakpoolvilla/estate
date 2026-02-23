@@ -30,6 +30,7 @@ export default function AdminVillasPage() {
   const [list, setList] = useState<Villa[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [toggling, setToggling] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -41,6 +42,22 @@ export default function AdminVillasPage() {
       .catch(() => setList([]))
       .finally(() => setLoading(false));
   }, []);
+
+  async function handleTogglePublish(id: string, current: boolean) {
+    setToggling(id);
+    try {
+      const res = await fetch(`/api/admin/villas/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPublished: !current }),
+      });
+      if (res.ok) {
+        setList((prev) => prev.map((v) => (v.id === id ? { ...v, isPublished: !current } : v)));
+      }
+    } finally {
+      setToggling(null);
+    }
+  }
 
   async function handleDelete(id: string) {
     if (!confirm("ต้องการลบรายการนี้?")) return;
@@ -107,13 +124,28 @@ export default function AdminVillasPage() {
                         <td className="py-3 px-4 text-gray-600">{v.location}</td>
                         <td className="py-3 px-4">฿{formatPrice(v.price)}</td>
                         <td className="py-3 px-4">
-                          <span
-                            className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
-                              v.isPublished ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-600"
-                            }`}
+                          <button
+                            type="button"
+                            onClick={() => handleTogglePublish(v.id, v.isPublished)}
+                            disabled={toggling === v.id}
+                            className="group flex items-center gap-1.5 disabled:opacity-60"
+                            title={v.isPublished ? "กดเพื่อซ่อนจากเว็บไซต์" : "กดเพื่อแสดงบนเว็บไซต์"}
                           >
-                            {v.isPublished ? "แสดง" : "ซ่อน"}
-                          </span>
+                            <span
+                              className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+                                v.isPublished ? "bg-green-500" : "bg-gray-300"
+                              }`}
+                            >
+                              <span
+                                className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${
+                                  v.isPublished ? "translate-x-[18px]" : "translate-x-[3px]"
+                                }`}
+                              />
+                            </span>
+                            <span className={`text-xs font-medium ${v.isPublished ? "text-green-700" : "text-gray-500"}`}>
+                              {toggling === v.id ? "..." : v.isPublished ? "แสดง" : "ซ่อน"}
+                            </span>
+                          </button>
                         </td>
                         <td className="py-3 px-4 text-right whitespace-nowrap">
                           <button

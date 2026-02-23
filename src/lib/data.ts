@@ -97,6 +97,26 @@ export type ArticleDetail = {
   createdAt: Date;
 };
 
+/** รวม gallery groups ที่ label เหมือนกัน (หรือว่าง) ให้เป็นก้อนเดียว */
+function mergeGalleryGroups(
+  items: { label: string; area: string; imageUrls: string[] }[],
+): { label: string; area: string; imageUrls: string[] }[] {
+  const map = new Map<string, { label: string; area: string; imageUrls: string[] }>();
+  for (const item of items) {
+    const key = (item.label || "").trim().toLowerCase() || "__unlabeled__";
+    const existing = map.get(key);
+    if (existing) {
+      for (const url of item.imageUrls) {
+        if (!existing.imageUrls.includes(url)) existing.imageUrls.push(url);
+      }
+      if (!existing.area && item.area) existing.area = item.area;
+    } else {
+      map.set(key, { label: item.label || "รูปภาพ", area: item.area, imageUrls: [...item.imageUrls] });
+    }
+  }
+  return Array.from(map.values()).filter((g) => g.imageUrls.length > 0);
+}
+
 function profitFromVilla(v: { investmentMonthly?: unknown }): string {
   const m = v.investmentMonthly as { profit?: string } | null | undefined;
   return (m?.profit as string) ?? "";
@@ -146,7 +166,7 @@ export async function getPortfolioStats(): Promise<PortfolioStats> {
 export async function getVillasForList(): Promise<VillaListItem[]> {
   const list = await prisma.villa.findMany({
     where: { isPublished: true },
-    orderBy: { sortOrder: "asc" },
+    orderBy: [{ createdAt: "desc" }, { sortOrder: "asc" }],
   });
   return list.map((v) => ({
     id: v.id,
@@ -175,11 +195,21 @@ export async function getVillaForDetail(id: string): Promise<VillaDetail | null>
   const inv = (v.investmentMonthly as { revenue?: string; expenses?: string; profit?: string }) ?? {};
   const areaVideosRaw = v.areaVideos as { label: string; youtubeId: string }[] | null | undefined;
   const areaVideos = Array.isArray(areaVideosRaw) ? areaVideosRaw : [];
-  const galleryRaw = v.gallery as { label: string; area: string; imageUrl?: string; imageUrls?: string[] }[] | null | undefined;
-  const gallery = (Array.isArray(galleryRaw) ? galleryRaw : []).map((item) => ({
-    ...item,
-    imageUrls: Array.isArray(item.imageUrls) ? item.imageUrls : (item.imageUrl ? [item.imageUrl] : []),
-  }));
+  const galleryRaw = v.gallery as { label: string; area: string; imageUrl?: string; imageUrls?: unknown }[] | null | undefined;
+  const gallery = mergeGalleryGroups(
+    (Array.isArray(galleryRaw) ? galleryRaw : []).map((item) => {
+      let urls: string[] = [];
+      const iu = item.imageUrls;
+      if (Array.isArray(iu)) {
+        urls = iu.filter((u): u is string => typeof u === "string" && u.startsWith("http"));
+      } else if (iu && typeof iu === "object") {
+        urls = Object.values(iu).filter((u): u is string => typeof u === "string" && u.startsWith("http"));
+      } else if (item.imageUrl && typeof item.imageUrl === "string" && item.imageUrl.startsWith("http")) {
+        urls = [item.imageUrl];
+      }
+      return { label: item.label || "", area: item.area || "", imageUrls: urls };
+    }),
+  );
   const rentalHistoryRaw = v.rentalHistory as { period: string; occupancy: string; avgRate: string; note?: string }[] | null | undefined;
   const rentalHistory = Array.isArray(rentalHistoryRaw) ? rentalHistoryRaw : [];
   const accountingSummaryRaw = v.accountingSummary as { period: string; revenue: string; profit: string }[] | null | undefined;

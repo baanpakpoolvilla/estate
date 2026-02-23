@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getVillaForDetail, getContactSettings } from "@/lib/data";
 import { formatPrice, formatNumber } from "@/lib/format";
+import { isExternalImage } from "@/lib/image-utils";
 import MapDisplay from "@/components/MapDisplay";
 import DetailGallery from "@/components/DetailGallery";
 
@@ -17,10 +18,42 @@ type Params = { id: string };
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://topform-realestate.com");
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://topformestate.com");
 
-// ให้ Vercel/production ดึงข้อมูลจาก DB ทุกครั้ง เหมือน localhost
 export const dynamic = "force-dynamic";
+
+/** ลบ HTML tags + entities ออกจาก description */
+function stripHtml(text: string): string {
+  let t = text;
+  t = t.replace(/<br\s*\/?>/gi, "\n");
+  t = t.replace(/<\/p>/gi, "\n");
+  t = t.replace(/<[^>]+>/g, "");
+  t = t.replace(/&nbsp;/gi, " ");
+  t = t.replace(/&amp;/gi, "&");
+  t = t.replace(/&lt;/gi, "<");
+  t = t.replace(/&gt;/gi, ">");
+  t = t.replace(/&quot;/gi, '"');
+  t = t.replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)));
+  return t.trim();
+}
+
+/** แปลง description ที่มี 【หัวข้อ】 เป็น array ของ { title, body } */
+function parseDescriptionSections(desc: string | null): { title: string; body: string }[] {
+  if (!desc || !desc.trim()) return [];
+  const clean = stripHtml(desc);
+  const sections: { title: string; body: string }[] = [];
+  const re = /【([^】]+)】\s*\n?([\s\S]*?)(?=【|$)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(clean)) !== null) {
+    const title = m[1].trim();
+    const body = m[2].replace(/\s+/g, " ").trim();
+    if (title && body) sections.push({ title, body });
+  }
+  if (sections.length === 0 && clean.trim()) {
+    sections.push({ title: "รายละเอียด", body: clean.trim() });
+  }
+  return sections;
+}
 
 export async function generateMetadata({
   params,
@@ -33,15 +66,12 @@ export async function generateMetadata({
     if (!villa) return { title: "ไม่พบบ้าน" };
     const title = `${villa.name} | พูลวิลล่า ${villa.location}`;
     const description =
-      villa.desc ||
-      `พูลวิลล่า ${villa.name} ทำเล${villa.location} ราคา ฿${formatPrice(villa.price)}${villa.roi ? ` ROI ~${villa.roi}%` : ""}${villa.investmentMonthly.profit ? ` กำไรประมาณ ฿${formatNumber(villa.investmentMonthly.profit)}/เดือน` : ""}`;
+      villa.desc?.replace(/【[^】]+】/g, "").slice(0, 160) ||
+      `พูลวิลล่า ${villa.name} ทำเล${villa.location} ราคา ฿${formatPrice(villa.price)}`;
     return {
       title,
       description,
-      openGraph: {
-        title: `${title} | ท๊อปฟอร์ม อสังหาริมทรัพย์`,
-        description,
-      },
+      openGraph: { title: `${title} | ท๊อปฟอร์ม อสังหาริมทรัพย์`, description },
       alternates: { canonical: `/villas/${id}` },
     };
   } catch {
@@ -68,25 +98,13 @@ export default async function VillaDetailPage({
     notFound();
   }
   if (!villa) notFound();
-  const telHref = contact?.phone ? `tel:${contact.phone.replace(/\D/g, "")}` : "tel:0812345678";
 
-  const villaJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "RealEstateListing",
-    name: villa.name,
-    description: villa.desc || undefined,
-    address: { "@type": "PostalAddress", addressLocality: villa.location },
-    ...(villa.land && { numberOfRooms: villa.beds }),
-    url: `${siteUrl}/villas/${id}`,
-  };
+  const telHref = contact?.phone ? `tel:${contact.phone.replace(/\D/g, "")}` : "tel:0812345678";
+  const descSections = parseDescriptionSections(villa.desc || null);
+  const galleryByLabel = villa.gallery.filter((g) => (g.imageUrls?.length ?? 0) > 0);
 
   return (
     <div className="w-full min-w-0 space-y-8 md:space-y-10">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(villaJsonLd) }}
-      />
-      {/* ส่วนบน: ปุ่มกลับและติดต่อด่วน */}
       <div className="flex items-center justify-between">
         <Link href="/villas" className="text-blue text-sm font-medium hover:underline">
           กลับไปหน้ารายการ
@@ -96,23 +114,21 @@ export default async function VillaDetailPage({
         </a>
       </div>
 
-      {/* Hero: วิดีโอหลัก หรือ รูปภาพหลัก */}
+      {/* Hero: วิดีโอหลัก หรือ รูปหลัก */}
       {villa.mainVideoId ? (
-        <section className="space-y-3">
+        <section className="space-y-2">
           <div className="relative aspect-video rounded-2xl overflow-hidden bg-black">
             <iframe
-              src={`https://www.youtube.com/embed/${villa.mainVideoId}?autoplay=1&mute=1&loop=1&playlist=${villa.mainVideoId}`}
+              src={`https://www.youtube.com/embed/${villa.mainVideoId}?autoplay=0&mute=1`}
               title={villa.name}
               className="w-full h-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
             />
           </div>
-          <p className="text-xs text-gray-500">
-            * วิดีโอตัวอย่างบรรยากาศจริงของบ้าน (เปิดอัตโนมัติแบบปิดเสียง)
-          </p>
+          <p className="text-xs text-gray-500">วีดีโอที่พัก YouTube</p>
         </section>
-      ) : villa.gallery.length > 0 || villa.imageUrl ? (
+      ) : (villa.imageUrl || villa.gallery[0]?.imageUrls?.[0]) ? (
         <section>
           <div className="relative aspect-[21/9] sm:aspect-[21/8] rounded-2xl overflow-hidden bg-navy">
             <Image
@@ -122,80 +138,39 @@ export default async function VillaDetailPage({
               sizes="100vw"
               priority
               className="object-cover"
+              unoptimized={isExternalImage(villa.imageUrl || villa.gallery[0]?.imageUrls?.[0] || "")}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-navy/60 via-transparent to-transparent" />
           </div>
         </section>
       ) : null}
 
-      {/* ภาพรวมบ้าน + ตัวเลขสรุปหลัก */}
-      <section className="grid md:grid-cols-3 gap-6 md:gap-8 items-start">
-        <div className="md:col-span-2 space-y-3">
-          <div className="flex flex-wrap gap-1.5 mb-1">
-            <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold ${STATUS_COLORS[villa.status] ?? "bg-blue text-white"}`}>
-              {STATUS_LABELS[villa.status] ?? "ขาย"}
-            </span>
-            <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold ${TYPE_COLORS[villa.propertyType] ?? "bg-navy/90 text-white"}`}>
-              {TYPE_LABELS[villa.propertyType] ?? "พูลวิลล่า"}
-            </span>
-          </div>
-          <h1 className="font-bold text-xl md:text-2xl lg:text-3xl text-navy">
-            {villa.name}
-          </h1>
-          <p className="text-gray-600 md:text-lg">{villa.location}</p>
-          {villa.desc && (
-            <div
-              className="text-gray-700 text-sm md:text-base mt-2 prose prose-sm max-w-none prose-p:my-2 prose-headings:my-3 prose-img:rounded-xl prose-img:max-w-full prose-a:text-blue"
-              dangerouslySetInnerHTML={{ __html: villa.desc }}
-            />
-          )}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4">
-            {villa.beds > 0 && (
-              <div className="flex items-center gap-2.5 bg-offwhite rounded-xl px-3.5 py-3 border border-gray-100">
-                <svg className="w-5 h-5 text-blue shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
-                <div>
-                  <p className="text-navy font-bold text-lg leading-tight">{villa.beds}</p>
-                  <p className="text-gray-500 text-xs">ห้องนอน</p>
-                </div>
-              </div>
-            )}
-            {villa.baths > 0 && (
-              <div className="flex items-center gap-2.5 bg-offwhite rounded-xl px-3.5 py-3 border border-gray-100">
-                <svg className="w-5 h-5 text-blue shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <div>
-                  <p className="text-navy font-bold text-lg leading-tight">{villa.baths}</p>
-                  <p className="text-gray-500 text-xs">ห้องน้ำ</p>
-                </div>
-              </div>
-            )}
-            {villa.sqm > 0 && (
-              <div className="flex items-center gap-2.5 bg-offwhite rounded-xl px-3.5 py-3 border border-gray-100">
-                <svg className="w-5 h-5 text-blue shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>
-                <div>
-                  <p className="text-navy font-bold text-lg leading-tight">{villa.sqm}</p>
-                  <p className="text-gray-500 text-xs">ตร.ม.</p>
-                </div>
-              </div>
-            )}
-            {villa.land > 0 && (
-              <div className="flex items-center gap-2.5 bg-offwhite rounded-xl px-3.5 py-3 border border-gray-100">
-                <svg className="w-5 h-5 text-blue shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" /></svg>
-                <div>
-                  <p className="text-navy font-bold text-lg leading-tight">{villa.land}</p>
-                  <p className="text-gray-500 text-xs">ตร.ว.</p>
-                </div>
-              </div>
-            )}
-          </div>
+      {/* ชื่อ ทำเล แบดจ์ */}
+      <section>
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold ${STATUS_COLORS[villa.status] ?? "bg-blue text-white"}`}>
+            {STATUS_LABELS[villa.status] ?? "ขาย"}
+          </span>
+          <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold ${TYPE_COLORS[villa.propertyType] ?? "bg-navy/90 text-white"}`}>
+            {TYPE_LABELS[villa.propertyType] ?? "พูลวิลล่า"}
+          </span>
         </div>
+        <h1 className="font-bold text-xl md:text-2xl lg:text-3xl text-navy">
+          {villa.name}
+        </h1>
+        <p className="text-gray-600 md:text-lg mt-1">{villa.location}</p>
+      </section>
 
-        <div className="space-y-3">
+      {/* ตัวเลขหลัก + สเปกห้อง/พื้นที่ */}
+      <section className="grid md:grid-cols-3 gap-6 items-start">
+        <div className="md:col-span-2 space-y-4">
           <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
-            <h2 className="font-semibold text-navy mb-2 md:text-lg">ตัวเลขหลักของบ้าน</h2>
+            <h2 className="font-semibold text-navy mb-3 text-lg">ตัวเลขหลักของบ้าน</h2>
             <div className="space-y-2 text-sm md:text-base">
               <div className="flex justify-between">
                 <span className="text-gray-600">{villa.status === "rent" ? "ค่าเช่า" : "ราคาขาย"}</span>
-                <span className="font-semibold text-blue">฿{formatPrice(villa.price)}{villa.status === "rent" ? (RENT_PERIOD_LABELS[villa.rentPeriod ?? "monthly"] ?? "/เดือน") : ""}</span>
+                <span className="font-semibold text-blue">
+                  ฿{formatPrice(villa.price)}{villa.status === "rent" ? (RENT_PERIOD_LABELS[villa.rentPeriod ?? "monthly"] ?? "/เดือน") : ""}
+                </span>
               </div>
               {villa.roi && (
                 <div className="flex justify-between">
@@ -212,104 +187,146 @@ export default async function VillaDetailPage({
             </div>
           </div>
 
-          <div className="hidden md:block bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
-            <h2 className="font-semibold text-navy mb-3 md:text-lg">สนใจบ้านหลังนี้?</h2>
-            <div className="space-y-2.5">
-              <a
-                href={`tel:${contact?.phone?.replace(/\D/g, "") || "0914105011"}`}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-blue text-white font-semibold text-sm hover:bg-blue-light transition"
-              >
-                <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                <span>โทร {contact?.phone || "091-410-5011"}</span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            {villa.beds > 0 && (
+              <div className="flex items-center gap-2.5 bg-offwhite rounded-xl px-3.5 py-3 border border-gray-100">
+                <span className="text-navy font-bold text-lg">{villa.beds}</span>
+                <span className="text-gray-500 text-xs">ห้องนอน</span>
+              </div>
+            )}
+            {villa.baths > 0 && (
+              <div className="flex items-center gap-2.5 bg-offwhite rounded-xl px-3.5 py-3 border border-gray-100">
+                <span className="text-navy font-bold text-lg">{villa.baths}</span>
+                <span className="text-gray-500 text-xs">ห้องน้ำ</span>
+              </div>
+            )}
+            {villa.sqm > 0 && (
+              <div className="flex items-center gap-2.5 bg-offwhite rounded-xl px-3.5 py-3 border border-gray-100">
+                <span className="text-navy font-bold text-lg">{villa.sqm}</span>
+                <span className="text-gray-500 text-xs">ตร.ม.</span>
+              </div>
+            )}
+            {villa.land > 0 && (
+              <div className="flex items-center gap-2.5 bg-offwhite rounded-xl px-3.5 py-3 border border-gray-100">
+                <span className="text-navy font-bold text-lg">{villa.land}</span>
+                <span className="text-gray-500 text-xs">ตร.ว.</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
+          <h2 className="font-semibold text-navy mb-3 text-lg">สนใจบ้านหลังนี้?</h2>
+          <div className="space-y-2.5">
+            <a href={telHref} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-blue text-white font-semibold text-sm hover:bg-blue/90 transition">
+              <span>โทร {contact?.phone || "091-410-5011"}</span>
+            </a>
+            <a href={contact?.facebookUrl || "#"} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-[#1877F2] text-white font-semibold text-sm hover:bg-[#166FE5] transition">
+              <span>Inbox Facebook</span>
+            </a>
+            {contact?.lineUrl && (
+              <a href={contact.lineUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-[#06C755] text-white font-semibold text-sm hover:bg-[#05B64C] transition">
+                <span>Line</span>
               </a>
-              <a
-                href={contact?.facebookUrl || "https://www.facebook.com/topformrealestateforinvesment"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-[#1877F2] text-white font-semibold text-sm hover:bg-[#166FE5] transition"
-              >
-                <svg className="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                <span>Inbox Facebook</span>
-              </a>
-              {contact?.lineUrl && (
-                <a
-                  href={contact.lineUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-[#06C755] text-white font-semibold text-sm hover:bg-[#05B64C] transition"
-                >
-                  <svg className="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386a.63.63 0 01-.63-.629V8.108a.63.63 0 01.63-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016a.63.63 0 01-.63.629.626.626 0 01-.51-.262l-2.418-3.294v2.927a.63.63 0 01-1.26 0V8.108a.63.63 0 01.63-.63c.201 0 .385.096.51.262l2.418 3.294V8.108a.63.63 0 011.26 0v4.771zm-5.741 0a.63.63 0 01-1.26 0V8.108a.63.63 0 011.26 0v4.771zm-2.527.629H4.856a.63.63 0 01-.63-.629V8.108a.63.63 0 011.26 0v4.141h1.756c.349 0 .63.283.63.63a.63.63 0 01-.63.629zM24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314z"/></svg>
-                  <span>Line</span>
-                </a>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </section>
 
-      {/* วิดีโอแต่ละส่วนของบ้าน */}
-      {villa.areaVideos.length > 0 && (
+      {/* รายละเอียดบ้าน (แยกตาม 【หัวข้อ】 จากข้อมูลนำเข้า) */}
+      {descSections.length > 0 && (
         <section className="space-y-4">
-          <h2 className="font-semibold text-navy text-lg md:text-xl">วิดีโอส่วนต่างๆ ของบ้าน</h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {villa.areaVideos.map((v) => (
-              <div key={v.label} className="space-y-2">
-                <p className="text-sm font-medium text-navy">{v.label}</p>
-                <div className="relative aspect-video rounded-xl overflow-hidden bg-black">
-                  <iframe
-                    src={`https://www.youtube.com/embed/${v.youtubeId}?mute=1`}
-                    title={v.label}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
-                </div>
+          <h2 className="font-semibold text-navy text-lg md:text-xl">รายละเอียดบ้าน</h2>
+          <div className="space-y-4">
+            {descSections.map((sec, i) => (
+              <div key={i} className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
+                <h3 className="font-semibold text-navy mb-2 text-base">{sec.title}</h3>
+                <div className="text-gray-700 text-sm md:text-base whitespace-pre-line">{sec.body}</div>
               </div>
             ))}
           </div>
         </section>
       )}
 
-      {/* ที่ตั้งและแผนที่ */}
-      {/* สิ่งอำนวยความสะดวก */}
-      {(() => {
-        const a = villa.amenities;
-        const items: { label: string; icon: string; active: boolean; extra?: string }[] = [
-          { label: "สระว่ายน้ำ", icon: "🏊", active: a.pool },
-          { label: "สระว่ายน้ำเด็ก", icon: "👶", active: a.kidsPool },
-          { label: "คาราโอเกะ", icon: "🎤", active: a.karaoke },
-          { label: "โต๊ะปิงปอง", icon: "🏓", active: a.pingpong },
-          { label: "โต๊ะสนุ้ก/พูล", icon: "🎱", active: a.snooker },
-          { label: "อุปกรณ์ครัว", icon: "🍳", active: a.kitchen },
-          { label: "Wi-Fi", icon: "📶", active: a.wifi },
-          { label: "ที่จอดรถ", icon: "🚗", active: a.parking, extra: a.parkingSlots ? `${a.parkingSlots} คัน` : undefined },
-        ];
-        const active = items.filter((i) => i.active);
-        if (active.length === 0) return null;
-        return (
-          <section className="space-y-3">
-            <h2 className="font-semibold text-navy text-lg md:text-xl">สิ่งอำนวยความสะดวก</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {active.map((item) => (
-                <div key={item.label} className="flex items-center gap-3 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-100">
-                  <span className="text-xl">{item.icon}</span>
-                  <div>
-                    <p className="text-sm font-medium text-navy">{item.label}</p>
-                    {item.extra && <p className="text-xs text-gray-500">{item.extra}</p>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        );
-      })()}
+      {/* แกลเลอรี่ แยกตาม label (รูปที่พัก / รูปรีวิว) */}
+      {galleryByLabel.length > 0 && (
+        <section className="space-y-6">
+          {galleryByLabel.map((group, idx) => {
+            const images = (group.imageUrls ?? [])
+              .filter(Boolean)
+              .map((url) => ({ url, label: group.label || "", area: group.area || "" }));
+            if (images.length === 0) return null;
+            return (
+              <div key={idx}>
+                <h2 className="font-semibold text-navy text-lg md:text-xl mb-3">
+                  {group.label || "รูปภาพ"} ({images.length})
+                </h2>
+                <DetailGallery images={images} />
+              </div>
+            );
+          })}
+        </section>
+      )}
 
+      {/* รายได้ย้อนหลัง (accountingSummary) */}
+      {villa.accountingSummary.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="font-semibold text-navy text-lg md:text-xl">รายได้ย้อนหลัง (จากวันที่ถูกจอง)</h2>
+          <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100 overflow-x-auto">
+            <table className="min-w-full text-sm md:text-base">
+              <thead>
+                <tr className="border-b border-gray-200 text-left text-gray-500">
+                  <th className="py-2 pr-4">รอบระยะเวลา</th>
+                  <th className="py-2 pr-4">รายได้รวม</th>
+                  <th className="py-2 pr-4">กำไรสุทธิ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {villa.accountingSummary.map((row) => (
+                  <tr key={row.period} className="border-b last:border-none border-gray-100">
+                    <td className="py-2 pr-4">{row.period}</td>
+                    <td className="py-2 pr-4">฿{formatNumber(row.revenue)}</td>
+                    <td className="py-2 pr-4 text-green-700 font-medium">฿{formatNumber(row.profit)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {/* ตัวเลขการลงทุนรายเดือน */}
+      {(villa.investmentMonthly.revenue || villa.investmentMonthly.expenses || villa.investmentMonthly.profit) && (
+        <section className="space-y-3">
+          <h2 className="font-semibold text-navy text-lg md:text-xl">ตัวเลขการลงทุนรายเดือน (ประมาณการ)</h2>
+          <div className="grid md:grid-cols-3 gap-4">
+            {villa.investmentMonthly.revenue && (
+              <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
+                <p className="text-gray-500 text-sm mb-1">รายได้เฉลี่ยต่อเดือน</p>
+                <p className="font-semibold text-green-700 text-lg md:text-xl">฿{formatNumber(villa.investmentMonthly.revenue)}</p>
+              </div>
+            )}
+            {villa.investmentMonthly.expenses && (
+              <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
+                <p className="text-gray-500 text-sm mb-1">ค่าใช้จ่ายเฉลี่ยต่อเดือน</p>
+                <p className="font-semibold text-navy text-lg md:text-xl">฿{formatNumber(villa.investmentMonthly.expenses)}</p>
+              </div>
+            )}
+            {villa.investmentMonthly.profit && (
+              <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
+                <p className="text-gray-500 text-sm mb-1">กำไรสุทธิเฉลี่ยต่อเดือน</p>
+                <p className="font-semibold text-green-700 text-lg md:text-xl">฿{formatNumber(villa.investmentMonthly.profit)}</p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ที่ตั้งและแผนที่ */}
       {(villa.address || (villa.latitude != null && villa.longitude != null)) && (
         <section className="space-y-3">
           <h2 className="font-semibold text-navy text-lg md:text-xl">ที่ตั้งของบ้าน</h2>
-          {villa.address && (
-            <p className="text-gray-700 text-sm md:text-base">{villa.address}</p>
-          )}
+          {villa.address && <p className="text-gray-700 text-sm md:text-base">{villa.address}</p>}
           {villa.latitude != null && villa.longitude != null && (
             <div className="rounded-2xl overflow-hidden border border-gray-100" style={{ height: 320 }}>
               <MapDisplay lat={villa.latitude} lng={villa.longitude} name={villa.name} />
@@ -318,163 +335,22 @@ export default async function VillaDetailPage({
         </section>
       )}
 
-      {/* ประวัติการเช่า / ประวัติการทำธุรกิจ */}
-      {(villa.businessHistory || villa.rentalHistory.length > 0) && (
-        <section className="space-y-4">
-          <h2 className="font-semibold text-navy text-lg md:text-xl">
-            ประวัติการเช่าและการดำเนินธุรกิจของบ้าน
-          </h2>
-          <div className={`grid gap-6 ${villa.businessHistory && villa.rentalHistory.length > 0 ? "md:grid-cols-3" : ""}`}>
-            {villa.businessHistory && (
-              <div className={`bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100 ${villa.rentalHistory.length > 0 ? "md:col-span-2" : ""}`}>
-                <h3 className="font-medium text-navy mb-2">ภาพรวมการดำเนินธุรกิจ</h3>
-                <div className="text-gray-700 text-sm md:text-base prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: villa.businessHistory }} />
-              </div>
-            )}
-            {villa.rentalHistory.length > 0 && (
-              <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
-                <h3 className="font-medium text-navy mb-2">ประวัติการเช่า</h3>
-                <div className="space-y-2 text-sm md:text-base">
-                  {villa.rentalHistory.map((row) => (
-                    <div key={row.period} className="border-b last:border-none border-gray-100 pb-2">
-                      <p className="font-medium text-navy">{row.period}</p>
-                      <p className="text-gray-600 text-xs md:text-sm">อัตราการเข้าพัก: {row.occupancy}</p>
-                      <p className="text-gray-600 text-xs md:text-sm">ราคาเฉลี่ยต่อคืน: {row.avgRate}</p>
-                      {row.note && <p className="text-gray-500 text-xs md:text-sm mt-1">{row.note}</p>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* กำหนดการขาย */}
-      {villa.salePlan && (
-        <section className="space-y-3">
-          <h2 className="font-semibold text-navy text-lg md:text-xl">
-            กำหนดการขายและแผนปล่อยเช่าล่วงหน้า
-          </h2>
-          <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
-            <div className="text-gray-700 text-sm md:text-base prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: villa.salePlan }} />
-          </div>
-        </section>
-      )}
-
-      {/* ตัวเลขการลงทุนรายเดือน */}
-      {(villa.investmentMonthly.revenue || villa.investmentMonthly.expenses || villa.investmentMonthly.profit) && (
-        <section className="space-y-3">
-          <h2 className="font-semibold text-navy text-lg md:text-xl">
-            ตัวเลขการลงทุนรายเดือน (ประมาณการ)
-          </h2>
-          <div className="grid md:grid-cols-3 gap-4 md:gap-6">
-            {villa.investmentMonthly.revenue && (
-              <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
-                <p className="text-gray-500 text-xs md:text-sm mb-1">รายได้เฉลี่ยต่อเดือน</p>
-                <p className="font-semibold text-green-700 text-lg md:text-xl">฿{formatNumber(villa.investmentMonthly.revenue)}</p>
-              </div>
-            )}
-            {villa.investmentMonthly.expenses && (
-              <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
-                <p className="text-gray-500 text-xs md:text-sm mb-1">ค่าใช้จ่ายเฉลี่ยต่อเดือน</p>
-                <p className="font-semibold text-navy text-lg md:text-xl">฿{formatNumber(villa.investmentMonthly.expenses)}</p>
-              </div>
-            )}
-            {villa.investmentMonthly.profit && (
-              <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100">
-                <p className="text-gray-500 text-xs md:text-sm mb-1">กำไรสุทธิเฉลี่ยต่อเดือน</p>
-                <p className="font-semibold text-green-700 text-lg md:text-xl">฿{formatNumber(villa.investmentMonthly.profit)}</p>
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* รายรับ-รายจ่ายย้อนหลัง */}
-      {villa.accountingSummary.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="font-semibold text-navy text-lg md:text-xl">
-            รายรับ-รายจ่ายย้อนหลัง (สรุปทางบัญชี)
-          </h2>
-          <div className="bg-white rounded-2xl p-4 md:p-5 shadow-sm border border-gray-100 space-y-4">
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm md:text-base">
-                <thead>
-                  <tr className="border-b border-gray-200 text-left text-gray-500">
-                    <th className="py-2 pr-4">รอบระยะเวลา</th>
-                    <th className="py-2 pr-4">รายได้รวม</th>
-                    <th className="py-2 pr-4">กำไรสุทธิ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {villa.accountingSummary.map((row) => (
-                    <tr key={row.period} className="border-b last:border-none border-gray-100">
-                      <td className="py-2 pr-4">{row.period}</td>
-                      <td className="py-2 pr-4">฿{formatNumber(row.revenue)}</td>
-                      <td className="py-2 pr-4 text-green-700 font-medium">฿{formatNumber(row.profit)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* แกลเลอรี่ */}
-      {villa.gallery.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="font-semibold text-navy text-lg md:text-xl">แกลเลอรี่</h2>
-          <DetailGallery
-            images={villa.gallery
-              .map((item) => ({ url: (item.imageUrls ?? [])[0] ?? "", label: item.label || "", area: item.area || "" }))
-              .filter((img) => img.url)}
-          />
-        </section>
-      )}
-
-      {/* CTA ปรึกษาทีมงานหน้ารายละเอียดบ้าน */}
+      {/* CTA */}
       <section className="pt-2 pb-20 md:pb-0">
-        <Link
-          href="/contact"
-          className="block w-full md:max-w-sm mx-auto py-3 text-center font-semibold rounded-xl bg-blue text-white"
-        >
+        <Link href="/contact" className="block w-full md:max-w-sm mx-auto py-3 text-center font-semibold rounded-xl bg-blue text-white">
           ปรึกษาทีมงาน / ขอข้อมูลรายละเอียดเพิ่มเติม
         </Link>
       </section>
 
-      {/* Mobile sticky bottom CTA */}
+      {/* Mobile sticky CTA */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-4 pt-2 pb-3 shadow-[0_-2px_10px_rgba(0,0,0,0.08)]" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
         <p className="text-center text-xs font-semibold text-navy mb-2">สนใจหลังนี้ ติดต่อด่วน</p>
         <div className="flex gap-2">
-        <a
-          href={`tel:${contact?.phone?.replace(/\D/g, "") || "0914105011"}`}
-          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-blue text-white font-semibold text-sm active:opacity-90"
-        >
-          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-          โทร
-        </a>
-        <a
-          href={contact?.facebookUrl || "https://www.facebook.com/topformrealestateforinvesment"}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#1877F2] text-white font-semibold text-sm active:opacity-90"
-        >
-          <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-          Facebook
-        </a>
-        {contact?.lineUrl && (
-          <a
-            href={contact.lineUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#06C755] text-white font-semibold text-sm active:opacity-90"
-          >
-            <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386a.63.63 0 01-.63-.629V8.108a.63.63 0 01.63-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016a.63.63 0 01-.63.629.626.626 0 01-.51-.262l-2.418-3.294v2.927a.63.63 0 01-1.26 0V8.108a.63.63 0 01.63-.63c.201 0 .385.096.51.262l2.418 3.294V8.108a.63.63 0 011.26 0v4.771zm-5.741 0a.63.63 0 01-1.26 0V8.108a.63.63 0 011.26 0v4.771zm-2.527.629H4.856a.63.63 0 01-.63-.629V8.108a.63.63 0 011.26 0v4.141h1.756c.349 0 .63.283.63.63a.63.63 0 01-.63.629zM24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314z"/></svg>
-            Line
-          </a>
-        )}
+          <a href={telHref} className="flex-1 py-3 rounded-xl bg-blue text-white font-semibold text-sm text-center">โทร</a>
+          <a href={contact?.facebookUrl || "#"} target="_blank" rel="noopener noreferrer" className="flex-1 py-3 rounded-xl bg-[#1877F2] text-white font-semibold text-sm text-center">Facebook</a>
+          {contact?.lineUrl && (
+            <a href={contact.lineUrl} target="_blank" rel="noopener noreferrer" className="flex-1 py-3 rounded-xl bg-[#06C755] text-white font-semibold text-sm text-center">Line</a>
+          )}
         </div>
       </div>
     </div>

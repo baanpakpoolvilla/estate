@@ -4,6 +4,7 @@ import HeroSlider from "@/components/HeroSlider";
 import HomeSearch from "@/components/HomeSearch";
 import { getVillasForList, getProjectPromos, getArticlesForList } from "@/lib/data";
 import { formatPrice, formatNumber } from "@/lib/format";
+import { isExternalImage } from "@/lib/image-utils";
 
 const STATUS_LABELS: Record<string, string> = { sale: "ขาย", rent: "เช่า" };
 const RENT_PERIOD_LABELS: Record<string, string> = { monthly: "/เดือน", yearly: "/ปี" };
@@ -85,7 +86,7 @@ export default async function HomePage() {
             >
               <div className="relative aspect-[16/10] bg-navy overflow-hidden">
                 {villa.imageUrl ? (
-                  <Image src={villa.imageUrl} alt={villa.name} fill sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                  <Image src={villa.imageUrl} alt={villa.name} fill sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-300" unoptimized={isExternalImage(villa.imageUrl)} />
                 ) : villa.mainVideoId ? (
                   <Image src={`https://img.youtube.com/vi/${villa.mainVideoId}/mqdefault.jpg`} alt={villa.name} fill sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
                 ) : (
@@ -158,7 +159,7 @@ export default async function HomePage() {
             >
               <div className="relative aspect-[21/10] bg-gradient-to-br from-navy via-blue/30 to-navy overflow-hidden">
                 {project.imageUrl ? (
-                  <Image src={project.imageUrl} alt={project.name} fill sizes="(max-width:640px) 100vw, 50vw" className="object-cover" />
+                  <Image src={project.imageUrl} alt={project.name} fill sizes="(max-width:640px) 100vw, 50vw" className="object-cover" unoptimized={isExternalImage(project.imageUrl)} />
                 ) : null}
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue/40 via-transparent to-transparent" />
                 <div className="absolute inset-0 flex flex-col justify-end p-4 md:p-5 text-white">
@@ -202,7 +203,7 @@ export default async function HomePage() {
               >
                 <div className="relative aspect-[16/10] bg-gray-100 overflow-hidden">
                   {article.coverImageUrl ? (
-                    <Image src={article.coverImageUrl} alt="" fill sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <Image src={article.coverImageUrl} alt="" fill sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-300" unoptimized={isExternalImage(article.coverImageUrl)} />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-navy/10 to-blue/10">
                       <span className="text-gray-400 text-2xl">บทความ</span>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { formatPrice, formatNumber } from "@/lib/format";
+import { isExternalImage } from "@/lib/image-utils";
 
 export type HeroVilla = {
   id: string;
@@ -62,6 +63,7 @@ export default function HeroSlider({ villas }: { villas: HeroVilla[] }) {
               sizes="100vw"
               priority={i === 0}
               className="object-cover"
+              unoptimized={isExternalImage(villa.imageUrl || "")}
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/40 to-transparent" />

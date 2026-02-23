@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import { isExternalImage } from "@/lib/image-utils";
 
 type GalleryImage = { url: string; label?: string; area?: string };
 
@@ -50,6 +51,7 @@ export default function DetailGallery({ images }: { images: GalleryImage[] }) {
               fill
               sizes="(max-width:768px) 50vw, (max-width:1024px) 33vw, 25vw"
               className="object-cover group-hover:scale-105 transition-transform duration-300"
+              unoptimized={isExternalImage(img.url)}
             />
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
             {(img.label || img.area) && (
@@ -97,6 +99,7 @@ export default function DetailGallery({ images }: { images: GalleryImage[] }) {
                 sizes="100vw"
                 className="object-contain"
                 priority
+                unoptimized={isExternalImage(images[idx].url)}
               />
             </div>
 
@@ -118,7 +121,7 @@ export default function DetailGallery({ images }: { images: GalleryImage[] }) {
                   onClick={() => setIdx(i)}
                   className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden shrink-0 border-2 transition ${i === idx ? "border-white" : "border-transparent opacity-50 hover:opacity-80"}`}
                 >
-                  <Image src={img.url} alt="" fill sizes="64px" className="object-cover" />
+                  <Image src={img.url} alt="" fill sizes="64px" className="object-cover" unoptimized={isExternalImage(img.url)} />
                 </button>
               ))}
             </div>

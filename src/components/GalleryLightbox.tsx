@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import { isExternalImage } from "@/lib/image-utils";
 
 type GalleryImage = { url: string; label?: string };
 
@@ -60,6 +61,7 @@ export default function GalleryLightbox({ images }: Props) {
               sizes={i === 0 ? "(max-width:640px) 100vw, 66vw" : "(max-width:640px) 50vw, 33vw"}
               priority={i === 0}
               className="object-cover group-hover:scale-105 transition-transform duration-300"
+              unoptimized={isExternalImage(img.url)}
             />
             {i === showCount - 1 && (
               <div className="absolute inset-0 z-10 bg-black/70 flex flex-col items-center justify-center gap-1">
@@ -108,6 +110,7 @@ export default function GalleryLightbox({ images }: Props) {
                 sizes="100vw"
                 className="object-contain"
                 priority
+                unoptimized={isExternalImage(images[lightboxIdx].url)}
               />
             </div>
 
@@ -130,7 +133,7 @@ export default function GalleryLightbox({ images }: Props) {
                   onClick={() => setLightboxIdx(i)}
                   className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden shrink-0 border-2 transition ${i === lightboxIdx ? "border-white" : "border-transparent opacity-50 hover:opacity-80"}`}
                 >
-                  <Image src={img.url} alt="" fill sizes="64px" className="object-cover" />
+                  <Image src={img.url} alt="" fill sizes="64px" className="object-cover" unoptimized={isExternalImage(img.url)} />
                 </button>
               ))}
             </div>

@@ -2,6 +2,43 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { prisma } from "@/lib/db";
 
+function normalizeGalleryForResponse(gallery: unknown): { label: string; area: string; imageUrls: string[] }[] {
+  if (!Array.isArray(gallery)) return [];
+
+  const flat = gallery.map((item: unknown) => {
+    const raw = item as Record<string, unknown>;
+    let urls: string[] = [];
+    const r = raw?.imageUrls;
+    if (Array.isArray(r)) {
+      urls = r.filter((u): u is string => typeof u === "string" && u.startsWith("http"));
+    } else if (r != null && typeof r === "object") {
+      urls = Object.values(r).filter((u): u is string => typeof u === "string" && u.startsWith("http"));
+    } else if (raw?.imageUrl != null && typeof raw.imageUrl === "string") {
+      urls = [String(raw.imageUrl)];
+    }
+    return {
+      label: String(raw?.label ?? "").trim(),
+      area: String(raw?.area ?? ""),
+      imageUrls: urls,
+    };
+  });
+
+  const map = new Map<string, { label: string; area: string; imageUrls: string[] }>();
+  for (const item of flat) {
+    const key = (item.label || "").toLowerCase() || "__unlabeled__";
+    const existing = map.get(key);
+    if (existing) {
+      for (const url of item.imageUrls) {
+        if (!existing.imageUrls.includes(url)) existing.imageUrls.push(url);
+      }
+      if (!existing.area && item.area) existing.area = item.area;
+    } else {
+      map.set(key, { label: item.label || "รูปภาพ", area: item.area, imageUrls: [...item.imageUrls] });
+    }
+  }
+  return Array.from(map.values()).filter((g) => g.imageUrls.length > 0);
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -11,7 +48,8 @@ export async function GET(
   const { id } = await params;
   const villa = await prisma.villa.findUnique({ where: { id } });
   if (!villa) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(villa);
+  const gallery = normalizeGalleryForResponse(villa.gallery);
+  return NextResponse.json({ ...villa, gallery });
 }
 
 export async function PUT(

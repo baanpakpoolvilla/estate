@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import ImageUploadField from "@/components/admin/ImageUploadField";
 import MultiImageUpload from "@/components/admin/MultiImageUpload";
 import QuillEditor from "@/components/admin/QuillEditor";
 import MapPicker from "@/components/admin/MapPicker";
 import MapSearchBox from "@/components/admin/MapSearchBox";
 
 type AreaVideo = { label: string; youtubeId: string };
-type GalleryItem = { label: string; area: string; imageUrl: string };
+/** แกลเลอรี่เป็นกลุ่ม (เช่น รูปที่พัก / รูปรีวิว) แต่ละกลุ่มมีหลายรูป */
+type GalleryItem = { label: string; area: string; imageUrls: string[] };
 type RentalRow = { period: string; occupancy: string; avgRate: string; note: string };
 type AccountingRow = { period: string; revenue: string; profit: string };
 type Amenities = {
@@ -108,11 +108,25 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
       };
     }
     const inv = (initial.investmentMonthly as Record<string, string> | null) ?? {};
-    const rawGallery = parseArr<Record<string, unknown>>(initial.gallery).map((g) => ({
-      label: String(g.label ?? ""),
-      area: String(g.area ?? ""),
-      imageUrl: String(g.imageUrl ?? (Array.isArray(g.imageUrls) && g.imageUrls[0] ? g.imageUrls[0] : "")),
-    }));
+    const rawGallery = parseArr<Record<string, unknown>>(initial.gallery).map((g) => {
+      let urls: string[] = [];
+      const raw = g.imageUrls;
+      if (Array.isArray(raw)) {
+        urls = (raw as unknown[]).filter((u): u is string => typeof u === "string" && u.startsWith("http"));
+      } else if (raw != null && typeof raw === "object" && !Array.isArray(raw)) {
+        urls = Object.values(raw).filter((u): u is string => typeof u === "string" && u.startsWith("http"));
+      } else if (typeof raw === "string") {
+        try {
+          const parsed = JSON.parse(raw);
+          urls = Array.isArray(parsed) ? parsed.filter((u: unknown) => typeof u === "string" && (u as string).startsWith("http")) : [];
+        } catch {
+          urls = [];
+        }
+      } else if (g.imageUrl != null && typeof g.imageUrl === "string") {
+        urls = [(g.imageUrl as string).trim()].filter(Boolean);
+      }
+      return { label: String(g.label ?? ""), area: String(g.area ?? ""), imageUrls: urls };
+    });
     return {
       name: String(initial.name ?? ""),
       location: String(initial.location ?? ""),
@@ -183,8 +197,8 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
         sortOrder: form.sortOrder,
         isPublished: form.isPublished,
         areaVideos: form.areaVideos.filter((v) => v.label || v.youtubeId),
-        gallery: form.gallery.filter((g) => g.imageUrl || g.label).map((g) => ({
-          label: g.label, area: g.area, imageUrl: g.imageUrl,
+        gallery: form.gallery.filter((g) => g.imageUrls.length > 0 || g.label).map((g) => ({
+          label: g.label, area: g.area, imageUrls: g.imageUrls,
         })),
         rentalHistory: form.rentalHistory.filter((r) => r.period),
         businessHistory: form.businessHistory || null,
@@ -399,14 +413,28 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
         </div>
       </fieldset>
 
-      {/* สื่อ - รูปหลักและวิดีโอ */}
+      {/* รูปปกและวิดีโอ */}
       <fieldset className="space-y-4 bg-white rounded-xl p-4 border border-gray-100">
-        <legend className="text-sm font-semibold text-navy px-2">รูปภาพและวิดีโอหลัก</legend>
-        <ImageUploadField label="รูปปกวิลล่า (แสดงในหน้ารายการ / Hero)" value={form.imageUrl} onChange={(url) => update("imageUrl", url)} />
+        <legend className="text-sm font-semibold text-navy px-2">รูปปกและวิดีโอ</legend>
         <div>
-          <label className={labelCls}>YouTube Video ID หลัก</label>
+          <p className="text-sm font-medium text-gray-700 mb-1">รูปปกวิลล่า (แสดงในหน้ารายการ / Hero)</p>
+          <p className="text-xs text-gray-500 mb-2">ไม่ต้องอัปโหลดแยก — เลือกจากแกลเลอรี่ด้านล่าง โดยกดปุ่ม &quot;ตั้งเป็นภาพปก&quot; ที่รูปที่ต้องการ</p>
+          {form.imageUrl ? (
+            <div className="flex items-center gap-3">
+              <div className="w-24 h-24 rounded-xl overflow-hidden border border-gray-200 bg-gray-100 shrink-0">
+                <img src={form.imageUrl} alt="รูปปก" className="w-full h-full object-cover" />
+              </div>
+              <span className="text-sm text-gray-600">รูปปกปัจจุบัน</span>
+              <button type="button" onClick={() => update("imageUrl", "")} className="text-xs text-red-500 hover:underline">ล้างรูปปก</button>
+            </div>
+          ) : (
+            <p className="text-xs text-amber-600">ยังไม่ได้เลือกรูปปก — เลือกจากแกลเลอรี่ด้านล่าง</p>
+          )}
+        </div>
+        <div>
+          <label className={labelCls}>YouTube Video ID หลัก (ไม่บังคับ)</label>
           <input type="text" value={form.mainVideoId} onChange={(e) => update("mainVideoId", e.target.value)} placeholder="LXb3EKWsInQ" className={inputCls} />
-          <p className="text-xs text-gray-400 mt-1">ใส่เฉพาะ ID เช่น LXb3EKWsInQ จาก https://youtu.be/LXb3EKWsInQ (ไม่บังคับ)</p>
+          <p className="text-xs text-gray-400 mt-1">ใส่เฉพาะ ID จากลิงก์วิดีโอ (ไม่บังคับ)</p>
         </div>
       </fieldset>
 
@@ -428,11 +456,23 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
         <button type="button" onClick={() => update("areaVideos", [...form.areaVideos, { label: "", youtubeId: "" }])} className="text-sm text-blue hover:underline">+ เพิ่มวิดีโอ</button>
       </fieldset>
 
-      {/* แกลเลอรี่ */}
+      {/* แกลเลอรี่ (แยกกลุ่ม เช่น รูปที่พัก / รูปรีวิว) */}
       <GallerySection
         gallery={form.gallery}
         onChange={(g) => update("gallery", g)}
-        onAdd={(url) => setForm((prev) => ({ ...prev, gallery: [...prev.gallery, { label: "", area: "", imageUrl: url }] }))}
+        onAdd={(url, groupIndex) => {
+          setForm((prev) => {
+            const next = [...prev.gallery];
+            if (groupIndex != null && groupIndex >= 0 && groupIndex < next.length) {
+              next[groupIndex] = { ...next[groupIndex], imageUrls: [...next[groupIndex].imageUrls, url] };
+            } else {
+              next.push({ label: "", area: "", imageUrls: [url] });
+            }
+            return { ...prev, gallery: next };
+          });
+        }}
+        onSetCover={(url) => update("imageUrl", url)}
+        coverUrl={form.imageUrl}
         smallInputCls={smallInputCls}
       />
 
@@ -571,98 +611,141 @@ export default function VillaForm({ initial, onSubmit }: VillaFormProps) {
   );
 }
 
+const GALLERY_PAGE_SIZE = 30;
+
+function GalleryImageGrid({
+  urls,
+  coverUrl,
+  onSetCover,
+  onRemove,
+}: {
+  urls: string[];
+  coverUrl: string;
+  onSetCover: (url: string) => void;
+  onRemove: (idx: number) => void;
+}) {
+  const [visibleCount, setVisibleCount] = useState(GALLERY_PAGE_SIZE);
+  const visible = urls.slice(0, visibleCount);
+  const remaining = urls.length - visibleCount;
+
+  return (
+    <>
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+        {visible.map((url, ui) => (
+          <div key={ui} className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+            <img src={url} alt="" loading="lazy" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100">
+              <button
+                type="button"
+                onClick={() => onSetCover(url)}
+                className="px-2 py-1 rounded bg-white/90 text-navy text-[10px] font-medium hover:bg-white"
+              >
+                ตั้งเป็นภาพปก
+              </button>
+              <button
+                type="button"
+                onClick={() => onRemove(ui)}
+                className="px-2 py-1 rounded bg-red-500/90 text-white text-[10px] font-medium hover:bg-red-500"
+              >
+                ลบ
+              </button>
+            </div>
+            {coverUrl === url && (
+              <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-blue text-white text-[10px] font-medium">รูปปก</span>
+            )}
+          </div>
+        ))}
+      </div>
+      {remaining > 0 && (
+        <button
+          type="button"
+          onClick={() => setVisibleCount((c) => c + GALLERY_PAGE_SIZE)}
+          className="text-sm text-blue font-medium hover:underline"
+        >
+          ดูเพิ่มอีก {Math.min(remaining, GALLERY_PAGE_SIZE)} รูป (เหลือ {remaining} รูป)
+        </button>
+      )}
+    </>
+  );
+}
+
 function GallerySection({
   gallery,
   onChange,
   onAdd,
+  onSetCover,
+  coverUrl,
   smallInputCls,
 }: {
   gallery: GalleryItem[];
   onChange: (g: GalleryItem[]) => void;
-  onAdd: (url: string) => void;
+  onAdd: (url: string, groupIndex?: number) => void;
+  onSetCover: (url: string) => void;
+  coverUrl: string;
   smallInputCls: string;
 }) {
-  const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [addToGroupIndex, setAddToGroupIndex] = useState<number | null>(null);
 
-  function updateItem(idx: number, field: keyof GalleryItem, value: string) {
+  function updateGroup(groupIdx: number, patch: Partial<GalleryItem>) {
     const next = [...gallery];
-    next[idx] = { ...next[idx], [field]: value };
+    next[groupIdx] = { ...next[groupIdx], ...patch };
     onChange(next);
   }
 
-  function removeItem(idx: number) {
-    onChange(gallery.filter((_, i) => i !== idx));
-    if (editIdx === idx) setEditIdx(null);
-    else if (editIdx !== null && editIdx > idx) setEditIdx(editIdx - 1);
+  function removeImage(groupIdx: number, imgIdx: number) {
+    const next = [...gallery];
+    next[groupIdx] = { ...next[groupIdx], imageUrls: next[groupIdx].imageUrls.filter((_, i) => i !== imgIdx) };
+    if (next[groupIdx].imageUrls.length === 0) next.splice(groupIdx, 1);
+    onChange(next);
+  }
+
+  function removeGroup(groupIdx: number) {
+    onChange(gallery.filter((_, i) => i !== groupIdx));
   }
 
   return (
-    <fieldset className="space-y-4 bg-white rounded-xl p-4 border border-gray-100">
-      <legend className="text-sm font-semibold text-navy px-2">แกลเลอรี่รูปภาพ</legend>
+    <fieldset className="space-y-6 bg-white rounded-xl p-4 border border-gray-100">
+      <legend className="text-sm font-semibold text-navy px-2">แกลเลอรี่รูปภาพ (แยกกลุ่ม เช่น รูปที่พัก / รูปรีวิว)</legend>
 
-      {gallery.length > 0 && (
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-          {gallery.map((g, i) => (
-            <div key={i} className="relative group">
-              <div
-                className={`aspect-square rounded-lg overflow-hidden border-2 cursor-pointer transition ${editIdx === i ? "border-blue ring-2 ring-blue/30" : "border-gray-200 hover:border-blue/50"}`}
-                onClick={() => setEditIdx(editIdx === i ? null : i)}
-              >
-                {g.imageUrl ? (
-                  <img src={g.imageUrl} alt={g.label || ""} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs">ไม่มีรูป</div>
-                )}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition flex items-center justify-center">
-                  <span className="text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition drop-shadow">
-                    {editIdx === i ? "ปิด" : "แก้ไข"}
-                  </span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={(ev) => { ev.stopPropagation(); removeItem(i); }}
-                className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-red-500 text-white text-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow z-10"
-                title="ลบ"
-              >×</button>
-              {g.label && <p className="text-[10px] text-gray-600 mt-1 truncate text-center">{g.label}</p>}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {editIdx !== null && editIdx < gallery.length && (
-        <div className="p-3 bg-blue/5 rounded-xl border border-blue/20 space-y-2 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-navy">แก้ไขภาพที่ {editIdx + 1}</span>
-            <button type="button" onClick={() => setEditIdx(null)} className="text-xs text-gray-500 hover:text-gray-700">✕ ปิด</button>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2">
+      {gallery.map((group, gi) => (
+        <div key={gi} className="space-y-2 border border-gray-100 rounded-xl p-3 bg-gray-50/50">
+          <div className="flex flex-wrap items-center gap-2">
             <input
               type="text"
-              value={gallery[editIdx].label}
-              onChange={(e) => updateItem(editIdx, "label", e.target.value)}
-              placeholder="ชื่อ เช่น สระว่ายน้ำ"
-              className={smallInputCls}
+              value={group.label}
+              onChange={(e) => updateGroup(gi, { label: e.target.value })}
+              placeholder="ชื่อกลุ่ม เช่น รูปที่พัก, รูปรีวิว"
+              className={`${smallInputCls} max-w-[200px]`}
             />
-            <input
-              type="text"
-              value={gallery[editIdx].area}
-              onChange={(e) => updateItem(editIdx, "area", e.target.value)}
-              placeholder="พื้นที่ เช่น ภายนอก, ภายใน"
-              className={smallInputCls}
-            />
+            <span className="text-xs text-gray-500">({group.imageUrls.length} รูป)</span>
+            <button type="button" onClick={() => removeGroup(gi)} className="text-xs text-red-500 hover:underline">ลบกลุ่ม</button>
           </div>
-          <ImageUploadField
-            label="เปลี่ยนรูป"
-            value={gallery[editIdx].imageUrl}
-            onChange={(url) => updateItem(editIdx, "imageUrl", url)}
+          <GalleryImageGrid
+            urls={group.imageUrls}
+            coverUrl={coverUrl}
+            onSetCover={onSetCover}
+            onRemove={(ui) => removeImage(gi, ui)}
           />
         </div>
-      )}
+      ))}
 
-      <MultiImageUpload onUploaded={onAdd} />
-      <p className="text-xs text-gray-400">เลือกได้หลายรูปพร้อมกัน — บีบอัดเป็น WebP อัตโนมัติ — กดที่รูปเพื่อแก้ไขข้อมูล</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-gray-600">เพิ่มรูปเข้า:</span>
+        <select
+          value={addToGroupIndex === null ? "new" : addToGroupIndex}
+          onChange={(e) => setAddToGroupIndex(e.target.value === "new" ? null : Number(e.target.value))}
+          className="rounded-lg border border-gray-200 text-navy text-sm px-2 py-1.5"
+        >
+          <option value="new">กลุ่มใหม่</option>
+          {gallery.map((g, i) => (
+            <option key={i} value={i}>{g.label || `กลุ่มที่ ${i + 1}`}</option>
+          ))}
+        </select>
+        <MultiImageUpload
+          onUploaded={(url) => onAdd(url, addToGroupIndex ?? undefined)}
+        />
+      </div>
+      <p className="text-xs text-gray-400">เลือกรูปแล้วกด &quot;ตั้งเป็นภาพปก&quot; ที่รูปที่ต้องการ — อัปโหลดหลายรูปได้</p>
     </fieldset>
   );
 }

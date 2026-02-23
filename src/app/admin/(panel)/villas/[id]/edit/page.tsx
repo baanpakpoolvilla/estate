@@ -73,7 +73,7 @@ export default function AdminVillaEditPage() {
       <p className="text-gray-600 text-sm md:text-base mb-6">
         แก้ไขข้อมูลแล้วกดบันทึก
       </p>
-      <VillaForm initial={initial} onSubmit={handleSubmit} />
+      <VillaForm key={id} initial={initial} onSubmit={handleSubmit} />
     </div>
   );
 }

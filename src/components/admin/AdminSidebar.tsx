@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const navItems = [
   { href: "/admin", label: "แดชบอร์ด" },
   { href: "/admin/inquiries", label: "ข้อมูลลูกค้า" },
   { href: "/admin/villas", label: "จัดการพูลวิลล่า" },
+  { href: "/admin/import-villa", label: "นำเข้าข้อมูลบ้าน" },
   { href: "/admin/projects", label: "จัดการโฆษณา/โครงการ" },
   { href: "/admin/articles", label: "จัดการบทความ" },
   { href: "/admin/settings", label: "ตั้งค่าเว็บไซต์" },
@@ -18,8 +19,14 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   function isActive(href: string) {
+    if (!mounted) return false;
     if (href === "/admin") {
       return pathname === "/admin";
     }
@@ -52,6 +59,7 @@ export default function AdminSidebar() {
           <Link
             key={item.href}
             href={item.href}
+            suppressHydrationWarning
             className={`block px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors ${
               isActive(item.href)
                 ? "bg-blue text-white"

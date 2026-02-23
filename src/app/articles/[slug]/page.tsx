@@ -132,7 +132,7 @@ export default async function ArticleDetailPage({
           <img
             src={article.coverImageUrl}
             alt=""
-            className="w-full aspect-[21/9] md:aspect-[3/1] object-cover"
+            className="w-full h-full object-cover"
           />
         </div>
       ) : (

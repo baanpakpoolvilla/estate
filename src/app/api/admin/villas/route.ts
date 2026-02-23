@@ -9,12 +9,35 @@ export async function GET() {
   return NextResponse.json(list);
 }
 
+/** ปรับ gallery ให้เป็นรูปแบบที่ใช้ได้ — เก็บ URL ต้นทางไว้ ไม่อัปโหลด (ให้หน้าเว็บดึงรูปมาแสดงเอง) */
+function normalizeGallery(gallery: unknown): { label: string; area: string; imageUrls: string[] }[] {
+  if (!Array.isArray(gallery)) return [];
+  return gallery.map((item: unknown) => {
+    const raw = item as { label?: string; area?: string; imageUrls?: string[] };
+    const urls = Array.isArray(raw?.imageUrls)
+      ? (raw.imageUrls as string[]).filter((u) => typeof u === "string" && u.startsWith("http"))
+      : [];
+    return {
+      label: String(raw?.label ?? "รูปภาพ"),
+      area: String(raw?.area ?? ""),
+      imageUrls: urls,
+    };
+  });
+}
+
+function firstGalleryImageUrl(gallery: { label: string; area: string; imageUrls: string[] }[]): string | null {
+  for (const g of gallery) {
+    if (g.imageUrls?.length > 0) return g.imageUrls[0];
+  }
+  return null;
+}
+
 export async function POST(request: Request) {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: "Unauthorized" }, { status: auth.status });
   try {
     const body = await request.json();
-    const {
+    let {
       name,
       location,
       address,
@@ -45,6 +68,13 @@ export async function POST(request: Request) {
       amenities,
       ownerInfo,
     } = body;
+
+    gallery = normalizeGallery(gallery);
+
+    if (imageUrl == null || imageUrl === "") {
+      imageUrl = firstGalleryImageUrl(gallery) ?? null;
+    }
+
     const villa = await prisma.villa.create({
       data: {
         name: String(name ?? ""),

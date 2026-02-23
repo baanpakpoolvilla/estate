@@ -12,6 +12,7 @@ const nextConfig = {
       { protocol: "https", hostname: "img.youtube.com" },
       { protocol: "https", hostname: "unpkg.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "s3.ap-southeast-1.amazonaws.com" },
     ],
   },
   compress: true,

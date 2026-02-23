@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { formatPrice, formatNumber } from "@/lib/format";
+import { isExternalImage } from "@/lib/image-utils";
 import type { VillaListItem } from "@/lib/data";
 
 type Filters = {
@@ -240,15 +241,13 @@ export default function VillasContent({ villas }: { villas: VillaListItem[] }) {
               >
                 <div className="relative aspect-[16/10] bg-navy overflow-hidden">
                   {villa.imageUrl ? (
-                    <Image src={villa.imageUrl} alt={villa.name} fill sizes="(max-width:640px) 100vw, (max-width:1280px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <Image src={villa.imageUrl} alt={villa.name} fill sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-300" unoptimized={isExternalImage(villa.imageUrl)} />
                   ) : villa.mainVideoId ? (
-                    <Image src={`https://img.youtube.com/vi/${villa.mainVideoId}/mqdefault.jpg`} alt={villa.name} fill sizes="(max-width:640px) 100vw, (max-width:1280px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <Image src={`https://img.youtube.com/vi/${villa.mainVideoId}/mqdefault.jpg`} alt={villa.name} fill sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 33vw" className="object-cover group-hover:scale-105 transition-transform duration-300" />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-navy via-blue/30 to-navy flex items-center justify-center">
-                      <span className="text-white/40 text-lg">Pool Villa</span>
-                    </div>
+                    <div className="w-full h-full bg-gradient-to-br from-navy via-blue/30 to-navy" />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-navy/80 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-navy/60 via-transparent to-transparent" />
                   <div className="absolute top-2 left-2 flex flex-wrap gap-1">
                     <span className={`px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-semibold ${STATUS_COLORS[villa.status ?? "sale"] ?? "bg-blue text-white"}`}>
                       {STATUS_LABELS[villa.status ?? "sale"] ?? "ขาย"}
@@ -260,12 +259,9 @@ export default function VillasContent({ villas }: { villas: VillaListItem[] }) {
                   {villa.tag && (
                     <span className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-white/95 text-navy text-[10px] sm:text-xs font-medium">{villa.tag}</span>
                   )}
-                  <span className="absolute bottom-2 left-2 text-white/90 text-xs font-medium">
-                    {villa.mainVideoId ? "ดูวิดีโอ + รายละเอียดการลงทุน" : "ดูรูปภาพ + รายละเอียดการลงทุน"}
-                  </span>
                 </div>
-                <div className="p-4 sm:p-5">
-                  <h2 className="font-semibold text-navy text-base sm:text-lg group-hover:text-blue line-clamp-1">{villa.name}</h2>
+                <div className="p-4 md:p-5">
+                  <h3 className="font-semibold text-navy text-base md:text-lg group-hover:text-blue line-clamp-1">{villa.name}</h3>
                   <p className="text-gray-500 text-sm mt-0.5">{villa.location}</p>
                   <p className="text-blue font-bold text-base md:text-lg mt-2">
                     ฿{formatPrice(villa.price)}{(villa.status ?? "sale") === "rent" ? (RENT_PERIOD_LABELS[villa.rentPeriod ?? "monthly"] ?? "/เดือน") : ""}
