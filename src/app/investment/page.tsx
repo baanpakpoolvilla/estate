@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { getPortfolioStats } from "@/lib/data";
 import { formatNumber } from "@/lib/format";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "ลงทุนกับเรา",
   description:
