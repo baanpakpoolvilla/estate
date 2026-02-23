@@ -306,8 +306,8 @@ function extractGalleryFromScriptAndData(
   }
 
   return {
-    accommodation: [...new Set(accommodation)],
-    review: [...new Set(review)],
+    accommodation: Array.from(new Set(accommodation)),
+    review: Array.from(new Set(review)),
   };
 }
 
