@@ -119,7 +119,7 @@ export default async function VillaDetailPage({
         <section className="space-y-2">
           <div className="relative aspect-video rounded-2xl overflow-hidden bg-black">
             <iframe
-              src={`https://www.youtube.com/embed/${villa.mainVideoId}?autoplay=0&mute=1`}
+              src={`https://www.youtube.com/embed/${villa.mainVideoId}?autoplay=1&mute=1&playsinline=1&rel=0`}
               title={villa.name}
               className="w-full h-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

@@ -110,9 +110,9 @@ export default async function ProjectDetailPage({ params }: Props) {
           </h2>
           <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-sm">
             <iframe
-              src={`https://www.youtube.com/embed/${project.videoId}?rel=0`}
+              src={`https://www.youtube.com/embed/${project.videoId}?autoplay=1&mute=1&playsinline=1&rel=0`}
               title={`วิดีโอ ${project.name}`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
               className="absolute inset-0 w-full h-full"
             />
