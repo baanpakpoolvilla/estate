@@ -64,8 +64,7 @@ export async function uploadImageFromUrl(imageUrl: string): Promise<string | nul
       if (error) return null;
       const { data } = supabaseAdmin.storage.from(UPLOAD_BUCKET).getPublicUrl(path);
       return data.publicUrl;
-    } catch (e) {
-      lastError = e;
+    } catch {
       if (attempt < MAX_RETRIES) {
         await new Promise((r) => setTimeout(r, 1000));
         continue;
